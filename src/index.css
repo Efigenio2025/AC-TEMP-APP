@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+input, select, button, textarea {
+  font: inherit;
+}
+
+.glow-critical {
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.8);
+  animation: pulse-critical 0.9s infinite;
+}
+
+.glow-above {
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.7);
+  animation: pulse-above 1.5s infinite;
+}
+
+.glow-cold {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+  animation: pulse-critical 0.9s infinite;
+}
+
+@keyframes pulse-critical {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-above {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.01); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
