@@ -142,6 +142,20 @@ export default function LogPage() {
                 ))}
               </select>
               {loading && <p className="text-xs text-slate-400">Loading tonight's aircraft…</p>}
+              <div className="flex gap-2 overflow-x-auto pt-1 pb-1 -mx-1 px-1">
+                {tails.map((tail) => (
+                  <button
+                    key={tail.id}
+                    type="button"
+                    onClick={() => setSelectedId(tail.id)}
+                    className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap border ${
+                      selectedId === tail.id ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 border-slate-700 text-slate-200'
+                    }`}
+                  >
+                    {tail.tail_number}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
@@ -231,7 +245,7 @@ export default function LogPage() {
             </div>
             <button
               type="submit"
-              className="px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold"
+              className="px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold w-full"
               disabled={submitting || !selectedTail}
             >
               {submitting ? 'Submitting…' : 'Submit Temp Log'}

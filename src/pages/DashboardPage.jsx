@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTail, setSelectedTail] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -27,6 +28,7 @@ export default function DashboardPage() {
       setTails(tailData);
       setLogs(logData);
       setError('');
+      setLastUpdated(new Date());
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -37,6 +39,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData();
+    const timer = setInterval(() => {
+      loadData();
+    }, 15000);
+    return () => clearInterval(timer);
   }, []);
 
   const latestLogForTail = (tailNumber) =>
@@ -116,6 +122,11 @@ export default function DashboardPage() {
           </button>
         </div>
         {error && <p className="text-red-400 text-sm mb-2">{error}</p>}
+        {lastUpdated && (
+          <p className="text-xs text-slate-400 mb-2">
+            Auto-refreshes every 15s • Last updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           {statusFilters.map((filter) => (
             <FilterChip
