@@ -202,7 +202,7 @@ export default function DashboardPage() {
           <p className="text-slate-300">Loading…</p>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
               {filtered.map(({ tail, latest, countdown }) => (
                 <TailCard
                   key={tail.id}
