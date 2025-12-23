@@ -1,19 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Provided project defaults (fallback if env is not set)
+const fallbackUrl = 'https://bgqfxleuxgmvqmitfrce.supabase.co';
+const fallbackAnonKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncWZ4bGV1eGdtdnFtaXRmcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0Njg5ODUsImV4cCI6MjA4MjA0NDk4NX0.cV_jm4fnWRCJMxTXt1E6tkQNswBdSA9-UXsl-kWTk0Q';
 
-let supabase = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackUrl;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || fallbackAnonKey;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase env vars are missing; set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
-} else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.warn('Supabase env vars missing; using provided fallback URL/key. Add them to .env for production.');
 }
 
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export function getSupabaseClient() {
-  if (!supabase) {
-    throw new Error('Supabase is not configured. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment.');
-  }
   return supabase;
 }

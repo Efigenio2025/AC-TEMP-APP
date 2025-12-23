@@ -14,6 +14,8 @@ Environment variables (already provisioned in deployment):
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
+You can copy `.env.example` to `.env` for local runs (includes the provided OMA Supabase anon key).
+
 ## App routes
 
 - `/prep` – tonight's aircraft (add/update tails, purge toggle)
