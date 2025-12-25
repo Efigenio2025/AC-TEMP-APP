@@ -4,8 +4,8 @@ import LogPage from './pages/LogPage';
 import DashboardPage from './pages/DashboardPage';
 
 const navClasses = ({ isActive }) =>
-  `px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-    isActive ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-200'
+  `px-3 py-2 rounded-lg text-sm font-semibold transition-colors border ${
+    isActive ? 'bg-brand text-slate-900 border-brand' : 'bg-slate-800 text-slate-200 border-slate-700'
   }`;
 
 export default function App() {

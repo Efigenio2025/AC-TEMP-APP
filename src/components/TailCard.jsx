@@ -15,13 +15,13 @@ export default function TailCard({ tail, latestTemp, countdown, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full rounded-xl border border-slate-700 bg-slate-800/60 p-4 text-left hover:border-indigo-500 transition relative ${
+      className={`w-full rounded-xl border border-slate-700 bg-slate-800/60 p-4 text-left hover:border-brand transition relative ${
         glow
       }`}
     >
       <div className="flex items-center justify-between mb-2">
         <div>
-          <p className="text-xs uppercase text-indigo-300">Tail</p>
+          <p className="text-xs uppercase text-brand">Tail</p>
           <p className="text-lg font-bold">{tail.tail_number}</p>
         </div>
         <span className={`text-xs px-2 py-1 rounded ${status.badge}`}>{status.label}</span>

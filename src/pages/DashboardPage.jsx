@@ -147,7 +147,7 @@ export default function DashboardPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">Snapshot</p>
+            <p className="text-xs uppercase text-brand">Snapshot</p>
             <h2 className="text-xl font-bold">Tonight's Temperature Status</h2>
           </div>
           <button

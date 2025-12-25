@@ -26,6 +26,11 @@ export default {
         normal: '#22c55e',
         above: '#f97316',
         critical: '#dc2626',
+        brand: {
+          DEFAULT: '#6fa8d6',
+          dark: '#4c85b5',
+          light: '#9ec5e6',
+        },
       },
     },
   },

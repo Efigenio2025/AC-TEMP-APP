@@ -103,7 +103,7 @@ export default function PrepPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">Tonight</p>
+            <p className="text-xs uppercase text-brand">Tonight</p>
             <h2 className="text-xl font-bold">Prep Aircraft for {tonightDate()}</h2>
           </div>
           <button
@@ -119,7 +119,7 @@ export default function PrepPage() {
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300">Tail Number *</label>
             <input
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.tail_number}
               onChange={(e) => setFormState((s) => ({ ...s, tail_number: e.target.value }))}
               placeholder="N12345"
@@ -130,7 +130,7 @@ export default function PrepPage() {
             <label className="text-sm text-slate-300">In-Time *</label>
             <input
               type="time"
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.in_time}
               onChange={(e) => setFormState((s) => ({ ...s, in_time: e.target.value }))}
               required
@@ -139,7 +139,7 @@ export default function PrepPage() {
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300">Gate / Parking Location</label>
             <select
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.location}
               onChange={(e) => setFormState((s) => ({ ...s, location: e.target.value }))}
             >
@@ -185,7 +185,7 @@ export default function PrepPage() {
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full md:w-auto px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold"
+              className="w-full md:w-auto px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark font-semibold text-slate-900"
               disabled={saving}
             >
               {saving ? 'Saving…' : editingLabel}

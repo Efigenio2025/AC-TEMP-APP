@@ -141,7 +141,7 @@ export default function LogPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">On-the-go</p>
+            <p className="text-xs uppercase text-brand">On-the-go</p>
             <h2 className="text-xl font-bold">Log Temperature</h2>
           </div>
           <button
@@ -176,7 +176,7 @@ export default function LogPage() {
                     type="button"
                     onClick={() => setSelectedId(tail.id)}
                     className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap border ${
-                      selectedId === tail.id ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 border-slate-700 text-slate-200'
+                      selectedId === tail.id ? 'bg-brand text-slate-900 border-brand' : 'bg-slate-900 border-slate-700 text-slate-200'
                     }`}
                   >
                     {tail.tail_number}
@@ -211,7 +211,7 @@ export default function LogPage() {
                       onClick={() => setHeaterMode(mode)}
                       className={`px-3 py-2 rounded-lg text-sm border uppercase ${
                         heaterMode === mode
-                          ? 'bg-indigo-600 text-white border-indigo-500'
+                          ? 'bg-brand text-slate-900 border-brand'
                           : 'bg-slate-900 border-slate-700 text-slate-200'
                       }`}
                     >
@@ -291,7 +291,7 @@ export default function LogPage() {
             </div>
             <button
               type="submit"
-              className="px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold w-full"
+              className="px-4 py-3 rounded-lg bg-brand hover:bg-brand-dark font-semibold w-full text-slate-900"
               disabled={submitting || !selectedTail}
             >
               {submitting ? 'Submitting…' : 'Submit Temp Log'}
