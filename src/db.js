@@ -67,6 +67,19 @@ export async function updateHeatSource(id, heat_source) {
   return data;
 }
 
+export async function updateHeaterMode(id, heater_mode) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('night_tails')
+    .update({ heater_mode })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function togglePurge(id, drained) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase

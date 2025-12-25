@@ -221,6 +221,7 @@ export default function DashboardPage() {
                     <th className="py-2">Tail</th>
                     <th>Location</th>
                     <th>Heat</th>
+                    <th>Heater</th>
                     <th>Last Temp</th>
                     <th>Last Time</th>
                     <th>Mark In</th>
@@ -234,6 +235,7 @@ export default function DashboardPage() {
                       <td className="py-2 font-semibold">{tail.tail_number}</td>
                       <td>{tail.location}</td>
                       <td>{tail.heat_source}</td>
+                      <td className="uppercase">{tail.heater_mode || 'OFF'}</td>
                       <td className={status.color}>{latest?.temp_f ?? '—'}</td>
                       <td>{latest ? new Date(latest.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                       <td>{tail.marked_in_at ? new Date(tail.marked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Pending'}</td>

@@ -6,8 +6,9 @@ import {
   markInTail,
   togglePurge,
   updateHeatSource,
+  updateHeaterMode,
 } from '../db';
-import { heatSources } from '../utils/constants';
+import { heatSources, heaterModes } from '../utils/constants';
 import { getTempStatus } from '../utils/status';
 import ToggleSwitch from '../components/ToggleSwitch';
 
@@ -16,6 +17,7 @@ export default function LogPage() {
   const [logs, setLogs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [heatOverride, setHeatOverride] = useState('');
+  const [heaterMode, setHeaterMode] = useState(heaterModes[0]);
   const [tempF, setTempF] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,6 +50,7 @@ export default function LogPage() {
   useEffect(() => {
     if (selectedTail) {
       setHeatOverride(selectedTail.heat_source);
+      setHeaterMode(selectedTail.heater_mode || heaterModes[0]);
     }
   }, [selectedTail]);
 
@@ -62,6 +65,9 @@ export default function LogPage() {
     try {
       if (heatOverride && heatOverride !== selectedTail.heat_source) {
         await updateHeatSource(selectedTail.id, heatOverride);
+      }
+      if (heaterMode && heaterMode !== selectedTail.heater_mode) {
+        await updateHeaterMode(selectedTail.id, heaterMode);
       }
       await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF) });
       setTempF('');
@@ -173,6 +179,25 @@ export default function LogPage() {
                     <option key={heat}>{heat}</option>
                   ))}
                 </select>
+              </div>
+              <div className="col-span-2">
+                <p className="text-slate-400">Heater Mode</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {heaterModes.map((mode) => (
+                    <button
+                      type="button"
+                      key={mode}
+                      onClick={() => setHeaterMode(mode)}
+                      className={`px-3 py-2 rounded-lg text-sm border uppercase ${
+                        heaterMode === mode
+                          ? 'bg-indigo-600 text-white border-indigo-500'
+                          : 'bg-slate-900 border-slate-700 text-slate-200'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

@@ -36,6 +36,10 @@ export default function TailCard({ tail, latestTemp, countdown, onClick }) {
           <p className="font-semibold">{tail.heat_source}</p>
         </div>
         <div>
+          <p className="text-slate-400">Heater</p>
+          <p className="font-semibold uppercase">{tail.heater_mode || 'OFF'}</p>
+        </div>
+        <div>
           <p className="text-slate-400">Last Temp</p>
           <p className="font-semibold">{latestTemp?.temp_f ?? '—'}</p>
         </div>
