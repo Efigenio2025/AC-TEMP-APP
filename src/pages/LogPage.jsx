@@ -3,6 +3,8 @@ import {
   fetchLatestTempLogs,
   fetchNightTails,
   insertTempLog,
+  fetchNotes,
+  insertNote,
   markInTail,
   togglePurge,
   updateHeatSource,
@@ -15,6 +17,7 @@ import ToggleSwitch from '../components/ToggleSwitch';
 export default function LogPage() {
   const [tails, setTails] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [heatOverride, setHeatOverride] = useState('');
   const [heaterMode, setHeaterMode] = useState(heaterModes[0]);
@@ -24,15 +27,18 @@ export default function LogPage() {
   const [submitting, setSubmitting] = useState(false);
   const [markingIn, setMarkingIn] = useState(false);
   const [purgingId, setPurgingId] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   const selectedTail = useMemo(() => tails.find((t) => t.id === selectedId), [tails, selectedId]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tailData, logData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs()]);
+      const [tailData, logData, noteData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs(), fetchNotes()]);
       setTails(tailData);
       setLogs(logData);
+      setNotes(noteData);
       setError('');
       if (tailData.length && !selectedId) setSelectedId(tailData[0].id);
     } catch (err) {
@@ -53,6 +59,21 @@ export default function LogPage() {
       setHeaterMode(selectedTail.heater_mode || heaterModes[0]);
     }
   }, [selectedTail]);
+
+  const handleAddNote = async () => {
+    if (!selectedTail || !noteText.trim()) return;
+    setSavingNote(true);
+    try {
+      await insertNote({ tail_number: selectedTail.tail_number, note: noteText.trim() });
+      setNoteText('');
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -277,6 +298,48 @@ export default function LogPage() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Notes</h3>
+          <p className="text-sm text-slate-400">Stored in Supabase with tonight's date</p>
+        </div>
+        <div className="space-y-3">
+          <textarea
+            className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+            rows="3"
+            placeholder={selectedTail ? `Note for ${selectedTail.tail_number}` : 'Select an aircraft first'}
+            disabled={!selectedTail}
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+          />
+          <button
+            type="button"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold disabled:opacity-50"
+            disabled={!selectedTail || savingNote || !noteText.trim()}
+            onClick={handleAddNote}
+          >
+            {savingNote ? 'Saving…' : 'Add Note'}
+          </button>
+          <div className="divide-y divide-slate-800 text-sm">
+            {[...notes]
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .slice(0, 20)
+              .map((note) => (
+                <div key={note.id} className="py-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">{note.tail_number}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <p className="text-slate-200 whitespace-pre-wrap">{note.note}</p>
+                </div>
+              ))}
+            {notes.length === 0 && <p className="text-slate-400">No notes yet for tonight.</p>}
+          </div>
+        </div>
       </div>
 
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
