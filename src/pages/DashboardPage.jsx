@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchLatestTempLogs, fetchNightTails } from '../db';
+import { fetchLatestTempLogs, fetchNightTails, fetchNotes } from '../db';
 import { getTempStatus } from '../utils/status';
 import FilterChip from '../components/FilterChip';
 import TailCard from '../components/TailCard';
@@ -15,6 +15,7 @@ const statusFilters = [
 export default function DashboardPage() {
   const [tails, setTails] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [filters, setFilters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,9 +28,10 @@ export default function DashboardPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tailData, logData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs()]);
+      const [tailData, logData, noteData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs(), fetchNotes()]);
       setTails(tailData);
       setLogs(logData);
+      setNotes(noteData);
       setError('');
       setLastUpdated(new Date());
     } catch (err) {
@@ -281,6 +283,30 @@ export default function DashboardPage() {
               {renderChart(tail)}
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">Notes</h3>
+          <p className="text-sm text-slate-400">Captured for tonight across all tails</p>
+        </div>
+        <div className="divide-y divide-slate-800 text-sm">
+          {[...notes]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 30)
+            .map((note) => (
+              <div key={note.id} className="py-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{note.tail_number}</p>
+                  <p className="text-xs text-slate-400">
+                    {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <p className="text-slate-200 whitespace-pre-wrap">{note.note}</p>
+              </div>
+            ))}
+          {notes.length === 0 && <p className="text-slate-400">No notes logged yet.</p>}
         </div>
       </div>
 
