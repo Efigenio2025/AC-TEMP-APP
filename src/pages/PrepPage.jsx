@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { deleteNightTail, fetchNightTails, tonightDate, upsertNightTail } from '../db';
-import { heatSources, locations } from '../utils/constants';
+import { heatSources, heaterModes, locations } from '../utils/constants';
 import ToggleSwitch from '../components/ToggleSwitch';
 
 export default function PrepPage() {
@@ -14,6 +14,7 @@ export default function PrepPage() {
     location: locations[0],
     heat_source: heatSources[0],
     drained: false,
+    heater_mode: heaterModes[0],
   });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -26,6 +27,7 @@ export default function PrepPage() {
       location: locations[0],
       heat_source: heatSources[0],
       drained: false,
+      heater_mode: heaterModes[0],
     });
   };
 
@@ -62,6 +64,7 @@ export default function PrepPage() {
         location: formState.location,
         heat_source: formState.heat_source,
         drained: formState.drained,
+        heater_mode: formState.heater_mode,
         purged_at: formState.drained ? new Date().toISOString() : null,
       });
       resetForm();
@@ -100,7 +103,7 @@ export default function PrepPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">Tonight</p>
+            <p className="text-xs uppercase text-brand">Tonight</p>
             <h2 className="text-xl font-bold">Prep Aircraft for {tonightDate()}</h2>
           </div>
           <button
@@ -116,7 +119,7 @@ export default function PrepPage() {
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300">Tail Number *</label>
             <input
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.tail_number}
               onChange={(e) => setFormState((s) => ({ ...s, tail_number: e.target.value }))}
               placeholder="N12345"
@@ -127,7 +130,7 @@ export default function PrepPage() {
             <label className="text-sm text-slate-300">In-Time *</label>
             <input
               type="time"
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.in_time}
               onChange={(e) => setFormState((s) => ({ ...s, in_time: e.target.value }))}
               required
@@ -136,7 +139,7 @@ export default function PrepPage() {
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300">Gate / Parking Location</label>
             <select
-              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-brand"
               value={formState.location}
               onChange={(e) => setFormState((s) => ({ ...s, location: e.target.value }))}
             >
@@ -157,6 +160,20 @@ export default function PrepPage() {
               ))}
             </select>
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-slate-300">Heater Mode</label>
+            <select
+              className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+              value={formState.heater_mode}
+              onChange={(e) => setFormState((s) => ({ ...s, heater_mode: e.target.value }))}
+            >
+              {heaterModes.map((mode) => (
+                <option key={mode} value={mode}>
+                  {mode.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-4">
             <ToggleSwitch
               label="Purged & Drained"
@@ -168,7 +185,7 @@ export default function PrepPage() {
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full md:w-auto px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold"
+              className="w-full md:w-auto px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark font-semibold text-slate-900"
               disabled={saving}
             >
               {saving ? 'Saving…' : editingLabel}
@@ -206,6 +223,10 @@ export default function PrepPage() {
                       <p className="font-semibold">{t.heat_source}</p>
                     </div>
                     <div>
+                      <p className="text-slate-400">Heater</p>
+                      <p className="font-semibold uppercase">{t.heater_mode || 'OFF'}</p>
+                    </div>
+                    <div>
                       <p className="text-slate-400">Marked In</p>
                       <p className="font-semibold">
                         {t.marked_in_at
@@ -235,6 +256,7 @@ export default function PrepPage() {
                           location: t.location,
                           heat_source: t.heat_source,
                           drained: t.drained,
+                          heater_mode: t.heater_mode || heaterModes[0],
                         })
                       }
                     >
@@ -258,6 +280,7 @@ export default function PrepPage() {
                     <th className="py-2">Tail</th>
                     <th>Location</th>
                     <th>Heat</th>
+                    <th>Heater</th>
                     <th>In-Time</th>
                     <th>Marked In</th>
                     <th>Purge</th>
@@ -270,6 +293,7 @@ export default function PrepPage() {
                       <td className="py-2 font-semibold">{t.tail_number}</td>
                       <td>{t.location}</td>
                       <td>{t.heat_source}</td>
+                      <td className="uppercase">{t.heater_mode || 'OFF'}</td>
                       <td>{t.in_time}</td>
                       <td>
                         {t.marked_in_at ? (
@@ -302,6 +326,7 @@ export default function PrepPage() {
                               location: t.location,
                               heat_source: t.heat_source,
                               drained: t.drained,
+                              heater_mode: t.heater_mode || heaterModes[0],
                             })
                           }
                         >
@@ -319,7 +344,7 @@ export default function PrepPage() {
                   ))}
                   {sortedTails.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="text-center py-4 text-slate-400">
+                      <td colSpan="8" className="text-center py-4 text-slate-400">
                         No aircraft added for tonight yet.
                       </td>
                     </tr>

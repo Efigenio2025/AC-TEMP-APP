@@ -67,6 +67,19 @@ export async function updateHeatSource(id, heat_source) {
   return data;
 }
 
+export async function updateHeaterMode(id, heater_mode) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('night_tails')
+    .update({ heater_mode })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function togglePurge(id, drained) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -111,4 +124,34 @@ export async function fetchLatestTempLogs() {
 
   if (error) throw error;
   return data || [];
+}
+
+export async function fetchNotes() {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('station', defaultStation)
+    .eq('night_date', tonightDate())
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function insertNote(payload) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('notes')
+    .insert({
+      station: defaultStation,
+      night_date: tonightDate(),
+      created_at: new Date().toISOString(),
+      ...payload,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }

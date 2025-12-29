@@ -3,34 +3,42 @@ import {
   fetchLatestTempLogs,
   fetchNightTails,
   insertTempLog,
+  fetchNotes,
+  insertNote,
   markInTail,
   togglePurge,
   updateHeatSource,
+  updateHeaterMode,
 } from '../db';
-import { heatSources } from '../utils/constants';
+import { heatSources, heaterModes } from '../utils/constants';
 import { getTempStatus } from '../utils/status';
 import ToggleSwitch from '../components/ToggleSwitch';
 
 export default function LogPage() {
   const [tails, setTails] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [heatOverride, setHeatOverride] = useState('');
+  const [heaterMode, setHeaterMode] = useState(heaterModes[0]);
   const [tempF, setTempF] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [markingIn, setMarkingIn] = useState(false);
   const [purgingId, setPurgingId] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   const selectedTail = useMemo(() => tails.find((t) => t.id === selectedId), [tails, selectedId]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tailData, logData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs()]);
+      const [tailData, logData, noteData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs(), fetchNotes()]);
       setTails(tailData);
       setLogs(logData);
+      setNotes(noteData);
       setError('');
       if (tailData.length && !selectedId) setSelectedId(tailData[0].id);
     } catch (err) {
@@ -48,8 +56,24 @@ export default function LogPage() {
   useEffect(() => {
     if (selectedTail) {
       setHeatOverride(selectedTail.heat_source);
+      setHeaterMode(selectedTail.heater_mode || heaterModes[0]);
     }
   }, [selectedTail]);
+
+  const handleAddNote = async () => {
+    if (!selectedTail || !noteText.trim()) return;
+    setSavingNote(true);
+    try {
+      await insertNote({ tail_number: selectedTail.tail_number, note: noteText.trim() });
+      setNoteText('');
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,6 +86,9 @@ export default function LogPage() {
     try {
       if (heatOverride && heatOverride !== selectedTail.heat_source) {
         await updateHeatSource(selectedTail.id, heatOverride);
+      }
+      if (heaterMode && heaterMode !== selectedTail.heater_mode) {
+        await updateHeaterMode(selectedTail.id, heaterMode);
       }
       await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF) });
       setTempF('');
@@ -114,7 +141,7 @@ export default function LogPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">On-the-go</p>
+            <p className="text-xs uppercase text-brand">On-the-go</p>
             <h2 className="text-xl font-bold">Log Temperature</h2>
           </div>
           <button
@@ -149,7 +176,7 @@ export default function LogPage() {
                     type="button"
                     onClick={() => setSelectedId(tail.id)}
                     className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap border ${
-                      selectedId === tail.id ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 border-slate-700 text-slate-200'
+                      selectedId === tail.id ? 'bg-brand text-slate-900 border-brand' : 'bg-slate-900 border-slate-700 text-slate-200'
                     }`}
                   >
                     {tail.tail_number}
@@ -173,6 +200,25 @@ export default function LogPage() {
                     <option key={heat}>{heat}</option>
                   ))}
                 </select>
+              </div>
+              <div className="col-span-2">
+                <p className="text-slate-400">Heater Mode</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                  {heaterModes.map((mode) => (
+                    <button
+                      type="button"
+                      key={mode}
+                      onClick={() => setHeaterMode(mode)}
+                      className={`px-3 py-2 rounded-lg text-sm border uppercase ${
+                        heaterMode === mode
+                          ? 'bg-brand text-slate-900 border-brand'
+                          : 'bg-slate-900 border-slate-700 text-slate-200'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -245,13 +291,55 @@ export default function LogPage() {
             </div>
             <button
               type="submit"
-              className="px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold w-full"
+              className="px-4 py-3 rounded-lg bg-brand hover:bg-brand-dark font-semibold w-full text-slate-900"
               disabled={submitting || !selectedTail}
             >
               {submitting ? 'Submitting…' : 'Submit Temp Log'}
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Notes</h3>
+          <p className="text-sm text-slate-400">Stored in Supabase with tonight's date</p>
+        </div>
+        <div className="space-y-3">
+          <textarea
+            className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 focus:outline-none focus:border-indigo-500"
+            rows="3"
+            placeholder={selectedTail ? `Note for ${selectedTail.tail_number}` : 'Select an aircraft first'}
+            disabled={!selectedTail}
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+          />
+          <button
+            type="button"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold disabled:opacity-50"
+            disabled={!selectedTail || savingNote || !noteText.trim()}
+            onClick={handleAddNote}
+          >
+            {savingNote ? 'Saving…' : 'Add Note'}
+          </button>
+          <div className="divide-y divide-slate-800 text-sm">
+            {[...notes]
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              .slice(0, 20)
+              .map((note) => (
+                <div key={note.id} className="py-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold">{note.tail_number}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <p className="text-slate-200 whitespace-pre-wrap">{note.note}</p>
+                </div>
+              ))}
+            {notes.length === 0 && <p className="text-slate-400">No notes yet for tonight.</p>}
+          </div>
+        </div>
       </div>
 
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchLatestTempLogs, fetchNightTails } from '../db';
+import { fetchLatestTempLogs, fetchNightTails, fetchNotes } from '../db';
 import { getTempStatus } from '../utils/status';
 import FilterChip from '../components/FilterChip';
 import TailCard from '../components/TailCard';
@@ -15,18 +15,23 @@ const statusFilters = [
 export default function DashboardPage() {
   const [tails, setTails] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [filters, setFilters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedTail, setSelectedTail] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [outsideTempF, setOutsideTempF] = useState(null);
+  const [weatherError, setWeatherError] = useState('');
+  const [nowTs, setNowTs] = useState(Date.now());
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tailData, logData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs()]);
+      const [tailData, logData, noteData] = await Promise.all([fetchNightTails(), fetchLatestTempLogs(), fetchNotes()]);
       setTails(tailData);
       setLogs(logData);
+      setNotes(noteData);
       setError('');
       setLastUpdated(new Date());
     } catch (err) {
@@ -37,12 +42,40 @@ export default function DashboardPage() {
     }
   };
 
+  const loadWeather = async () => {
+    try {
+      setWeatherError('');
+      // Omaha (Eppley Airfield) approximate coords
+      const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.302&longitude=-95.8947&current_weather=true');
+      if (!res.ok) throw new Error('Weather fetch failed');
+      const json = await res.json();
+      const tempC = json?.current_weather?.temperature;
+      if (typeof tempC === 'number') {
+        const tempF = tempC * 9 / 5 + 32;
+        setOutsideTempF(tempF);
+      } else {
+        throw new Error('Weather temp missing');
+      }
+    } catch (err) {
+      console.error(err);
+      setWeatherError('Outside temp unavailable; timers use 60m interval.');
+      setOutsideTempF(null);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadWeather();
     const timer = setInterval(() => {
       loadData();
     }, 15000);
-    return () => clearInterval(timer);
+    const tick = setInterval(() => setNowTs(Date.now()), 1000);
+    const weatherTimer = setInterval(() => loadWeather(), 10 * 60 * 1000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(tick);
+      clearInterval(weatherTimer);
+    };
   }, []);
 
   const latestLogForTail = (tailNumber) =>
@@ -55,9 +88,13 @@ export default function DashboardPage() {
       tails.map((tail) => {
         const latest = latestLogForTail(tail.tail_number);
         const status = getTempStatus(latest?.temp_f);
-        return { tail, latest, status };
+        const baseline = latest?.recorded_at || tail.created_at;
+        const intervalMinutes = outsideTempF !== null && outsideTempF < 10 ? 30 : 60;
+        const remainingMs = baseline ? Math.max(0, intervalMinutes * 60 * 1000 - (nowTs - new Date(baseline).getTime())) : null;
+        const countdown = remainingMs !== null ? { remainingMs, intervalMinutes } : null;
+        return { tail, latest, status, countdown };
       }),
-    [tails, logs],
+    [tails, logs, outsideTempF, nowTs],
   );
 
   const filtered = filters.length
@@ -110,7 +147,7 @@ export default function DashboardPage() {
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-xs uppercase text-indigo-300">Snapshot</p>
+            <p className="text-xs uppercase text-brand">Snapshot</p>
             <h2 className="text-xl font-bold">Tonight's Temperature Status</h2>
           </div>
           <button
@@ -127,6 +164,12 @@ export default function DashboardPage() {
             Auto-refreshes every 15s • Last updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         )}
+        <div className="flex flex-wrap gap-2 items-center mb-2 text-sm text-slate-300">
+          <span className="px-2 py-1 rounded bg-slate-900/70 border border-slate-800">
+            Outside temp: {outsideTempF !== null ? `${outsideTempF.toFixed(1)}°F` : '—'}
+          </span>
+          {weatherError && <span className="text-xs text-amber-300">{weatherError}</span>}
+        </div>
         <div className="flex flex-wrap gap-2">
           {statusFilters.map((filter) => (
             <FilterChip
@@ -160,19 +203,67 @@ export default function DashboardPage() {
         {loading ? (
           <p className="text-slate-300">Loading…</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map(({ tail, latest }) => (
-              <TailCard
-                key={tail.id}
-                tail={tail}
-                latestTemp={latest}
-                onClick={() => setSelectedTail({ tail, latest })}
-              />
-            ))}
-            {filtered.length === 0 && (
-              <p className="text-slate-400">No aircraft match the selected filters.</p>
-            )}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+              {filtered.map(({ tail, latest, countdown }) => (
+                <TailCard
+                  key={tail.id}
+                  tail={tail}
+                  latestTemp={latest}
+                  countdown={countdown}
+                  onClick={() => setSelectedTail({ tail, latest })}
+                />
+              ))}
+              {filtered.length === 0 && <p className="text-slate-400">No aircraft match the selected filters.</p>}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="text-left text-slate-400">
+                  <tr>
+                    <th className="py-2">Tail</th>
+                    <th>Location</th>
+                    <th>Heat</th>
+                    <th>Heater</th>
+                    <th>Last Temp</th>
+                    <th>Last Time</th>
+                    <th>Mark In</th>
+                    <th>Purge</th>
+                    <th>Timer</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {filtered.map(({ tail, latest, countdown, status }) => (
+                    <tr key={tail.id} className="hover:bg-slate-900/60">
+                      <td className="py-2 font-semibold">{tail.tail_number}</td>
+                      <td>{tail.location}</td>
+                      <td>{tail.heat_source}</td>
+                      <td className="uppercase">{tail.heater_mode || 'OFF'}</td>
+                      <td className={status.color}>{latest?.temp_f ?? '—'}</td>
+                      <td>{latest ? new Date(latest.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                      <td>{tail.marked_in_at ? new Date(tail.marked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Pending'}</td>
+                      <td>{tail.drained ? 'On' : 'Off'}</td>
+                      <td>
+                        {countdown ? (
+                          <span className="px-2 py-1 rounded bg-slate-900/70 text-indigo-200">
+                            {countdown.intervalMinutes}m • {Math.max(0, Math.floor(countdown.remainingMs / 60000))}m
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan="8" className="text-center py-4 text-slate-400">
+                        No aircraft match the selected filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -192,6 +283,30 @@ export default function DashboardPage() {
               {renderChart(tail)}
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">Notes</h3>
+          <p className="text-sm text-slate-400">Captured for tonight across all tails</p>
+        </div>
+        <div className="divide-y divide-slate-800 text-sm">
+          {[...notes]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 30)
+            .map((note) => (
+              <div key={note.id} className="py-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{note.tail_number}</p>
+                  <p className="text-xs text-slate-400">
+                    {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <p className="text-slate-200 whitespace-pre-wrap">{note.note}</p>
+              </div>
+            ))}
+          {notes.length === 0 && <p className="text-slate-400">No notes logged yet.</p>}
         </div>
       </div>
 

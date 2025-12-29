@@ -1,5 +1,6 @@
 const colorMap = {
-  indigo: 'bg-indigo-500',
+  indigo: 'bg-brand',
+  brand: 'bg-brand',
   emerald: 'bg-emerald-500',
   orange: 'bg-orange-500',
   sky: 'bg-sky-500',
