@@ -89,7 +89,7 @@ export default function DashboardPage() {
         const latest = latestLogForTail(tail.tail_number);
         const status = getTempStatus(latest?.temp_f);
         const baseline = latest?.recorded_at || tail.created_at;
-        const intervalMinutes = outsideTempF !== null && outsideTempF < 10 ? 30 : 60;
+        const intervalMinutes = outsideTempF !== null && outsideTempF < 10.9 ? 30 : 60;
         const remainingMs = baseline ? Math.max(0, intervalMinutes * 60 * 1000 - (nowTs - new Date(baseline).getTime())) : null;
         const countdown = remainingMs !== null ? { remainingMs, intervalMinutes } : null;
         return { tail, latest, status, countdown };
