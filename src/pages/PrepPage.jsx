@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { deleteNightTail, fetchNightTails, tonightDate, upsertNightTail } from '../db';
 import { heatSources, heaterModes, locations } from '../utils/constants';
 import ToggleSwitch from '../components/ToggleSwitch';
+import { useAuth } from '../hooks/useAuth';
 
 export default function PrepPage() {
+  const { user } = useAuth();
   const [tails, setTails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,16 +59,19 @@ export default function PrepPage() {
     }
     setSaving(true);
     try {
-      await upsertNightTail({
-        id: formState.id || undefined,
-        tail_number: formState.tail_number.trim().toUpperCase(),
-        in_time: formState.in_time,
-        location: formState.location,
-        heat_source: formState.heat_source,
-        drained: formState.drained,
-        heater_mode: formState.heater_mode,
-        purged_at: formState.drained ? new Date().toISOString() : null,
-      });
+      await upsertNightTail(
+        {
+          id: formState.id || undefined,
+          tail_number: formState.tail_number.trim().toUpperCase(),
+          in_time: formState.in_time,
+          location: formState.location,
+          heat_source: formState.heat_source,
+          drained: formState.drained,
+          heater_mode: formState.heater_mode,
+          purged_at: formState.drained ? new Date().toISOString() : null,
+        },
+        user?.email,
+      );
       resetForm();
       await loadTails();
     } catch (err) {

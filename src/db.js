@@ -22,11 +22,14 @@ export async function fetchNightTails() {
   return data || [];
 }
 
-export async function upsertNightTail(payload) {
+export async function upsertNightTail(payload, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
-    .upsert({ ...payload, station: defaultStation, night_date: tonightDate() }, { onConflict: 'station,night_date,tail_number' })
+    .upsert(
+      { ...payload, station: defaultStation, night_date: tonightDate(), recorded_by: recordedBy },
+      { onConflict: 'station,night_date,tail_number' },
+    )
     .select()
     .single();
 
@@ -41,11 +44,11 @@ export async function deleteNightTail(id) {
   return true;
 }
 
-export async function markInTail(id) {
+export async function markInTail(id, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
-    .update({ marked_in_at: new Date().toISOString() })
+    .update({ marked_in_at: new Date().toISOString(), recorded_by: recordedBy })
     .eq('id', id)
     .select()
     .single();
@@ -54,11 +57,11 @@ export async function markInTail(id) {
   return data;
 }
 
-export async function updateHeatSource(id, heat_source) {
+export async function updateHeatSource(id, heat_source, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
-    .update({ heat_source })
+    .update({ heat_source, recorded_by: recordedBy })
     .eq('id', id)
     .select()
     .single();
@@ -67,11 +70,11 @@ export async function updateHeatSource(id, heat_source) {
   return data;
 }
 
-export async function updateHeaterMode(id, heater_mode) {
+export async function updateHeaterMode(id, heater_mode, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
-    .update({ heater_mode })
+    .update({ heater_mode, recorded_by: recordedBy })
     .eq('id', id)
     .select()
     .single();
@@ -80,13 +83,14 @@ export async function updateHeaterMode(id, heater_mode) {
   return data;
 }
 
-export async function togglePurge(id, drained) {
+export async function togglePurge(id, drained, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
     .update({
       drained,
       purged_at: drained ? new Date().toISOString() : null,
+      recorded_by: recordedBy,
     })
     .eq('id', id)
     .select()
@@ -96,7 +100,7 @@ export async function togglePurge(id, drained) {
   return data;
 }
 
-export async function insertTempLog(payload) {
+export async function insertTempLog(payload, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('temp_logs')
@@ -104,6 +108,7 @@ export async function insertTempLog(payload) {
       station: defaultStation,
       night_date: tonightDate(),
       recorded_at: new Date().toISOString(),
+      recorded_by: recordedBy,
       ...payload,
     })
     .select()
@@ -139,7 +144,7 @@ export async function fetchNotes() {
   return data || [];
 }
 
-export async function insertNote(payload) {
+export async function insertNote(payload, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('notes')
@@ -147,6 +152,7 @@ export async function insertNote(payload) {
       station: defaultStation,
       night_date: tonightDate(),
       created_at: new Date().toISOString(),
+      recorded_by: recordedBy,
       ...payload,
     })
     .select()

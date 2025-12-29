@@ -14,8 +14,10 @@ import {
 import { heatSources, heaterModes } from '../utils/constants';
 import { getTempStatus } from '../utils/status';
 import ToggleSwitch from '../components/ToggleSwitch';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LogPage() {
+  const { user } = useAuth();
   const [tails, setTails] = useState([]);
   const [logs, setLogs] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -66,7 +68,7 @@ export default function LogPage() {
     if (!selectedTail || !noteText.trim()) return;
     setSavingNote(true);
     try {
-      await insertNote({ tail_number: selectedTail.tail_number, note: noteText.trim() });
+      await insertNote({ tail_number: selectedTail.tail_number, note: noteText.trim() }, user?.email);
       setNoteText('');
       await loadData();
     } catch (err) {
@@ -87,12 +89,12 @@ export default function LogPage() {
     setSubmitting(true);
     try {
       if (heatOverride && heatOverride !== selectedTail.heat_source) {
-        await updateHeatSource(selectedTail.id, heatOverride);
+        await updateHeatSource(selectedTail.id, heatOverride, user?.email);
       }
       if (heaterMode && heaterMode !== selectedTail.heater_mode) {
-        await updateHeaterMode(selectedTail.id, heaterMode);
+        await updateHeaterMode(selectedTail.id, heaterMode, user?.email);
       }
-      await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF) });
+      await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF) }, user?.email);
       setTempF('');
       await loadData();
     } catch (err) {
@@ -107,7 +109,7 @@ export default function LogPage() {
     if (!selectedTail || selectedTail.marked_in_at) return;
     setMarkingIn(true);
     try {
-      await markInTail(selectedTail.id);
+      await markInTail(selectedTail.id, user?.email);
       await loadData();
     } catch (err) {
       console.error(err);
@@ -121,7 +123,7 @@ export default function LogPage() {
     if (!selectedTail) return;
     setPurgingId(selectedTail.id);
     try {
-      await togglePurge(selectedTail.id, !selectedTail.drained);
+      await togglePurge(selectedTail.id, !selectedTail.drained, user?.email);
       await loadData();
     } catch (err) {
       console.error(err);
