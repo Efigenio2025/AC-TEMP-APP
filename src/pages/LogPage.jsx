@@ -13,6 +13,7 @@ import {
 import { heatSources, heaterModes } from '../utils/constants';
 import { getTempStatus } from '../utils/status';
 import ToggleSwitch from '../components/ToggleSwitch';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LogPage() {
   const [tails, setTails] = useState([]);
@@ -29,6 +30,7 @@ export default function LogPage() {
   const [purgingId, setPurgingId] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const { user } = useAuth();
 
   const selectedTail = useMemo(() => tails.find((t) => t.id === selectedId), [tails, selectedId]);
 
@@ -90,7 +92,7 @@ export default function LogPage() {
       if (heaterMode && heaterMode !== selectedTail.heater_mode) {
         await updateHeaterMode(selectedTail.id, heaterMode);
       }
-      await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF) });
+      await insertTempLog({ tail_number: selectedTail.tail_number, temp_f: Number(tempF), recorded_by: user?.email || 'anonymous' });
       setTempF('');
       await loadData();
     } catch (err) {
