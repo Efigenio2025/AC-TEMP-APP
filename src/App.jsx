@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ReportsPage from './pages/ReportsPage';
 import { useAuth } from './hooks/useAuth';
 import { getSupabaseClient } from './supabaseClient';
 
@@ -80,6 +81,9 @@ function AuthenticatedLayout() {
               <NavLink to="/dashboard" className={navClasses}>
                 Dashboard
               </NavLink>
+              <NavLink to="/reports" className={navClasses}>
+                Reports
+              </NavLink>
             </nav>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-300 hidden sm:inline">{user?.email}</span>
@@ -137,6 +141,7 @@ export default function App() {
         <Route path="/prep" element={<PrepPage />} />
         <Route path="/log" element={<LogPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/prep" replace />} />
     </Routes>
