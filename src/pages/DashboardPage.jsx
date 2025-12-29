@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchLatestTempLogs, fetchNightTails, fetchNotes } from '../db';
+import { fetchLatestTempLogs, fetchNightTails, fetchNotes, dispatchAircraft } from '../db';
 import { getTempStatus } from '../utils/status';
 import FilterChip from '../components/FilterChip';
 import TailCard from '../components/TailCard';
@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [outsideTempF, setOutsideTempF] = useState(null);
   const [weatherError, setWeatherError] = useState('');
   const [nowTs, setNowTs] = useState(Date.now());
+  const [dispatchingTail, setDispatchingTail] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -77,6 +78,25 @@ export default function DashboardPage() {
       clearInterval(weatherTimer);
     };
   }, []);
+
+  const handleDispatch = async (tailNumber) => {
+    if (!tailNumber) return;
+    const confirmed = window.confirm(
+      `Dispatch ${tailNumber}? This will move tonight's logs and notes to archive tables and remove the aircraft from active views.`,
+    );
+    if (!confirmed) return;
+    setDispatchingTail(tailNumber);
+    try {
+      await dispatchAircraft(tailNumber);
+      setSelectedTail(null);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setDispatchingTail(null);
+    }
+  };
 
   const latestLogForTail = (tailNumber) =>
     [...logs]
@@ -361,6 +381,19 @@ export default function DashboardPage() {
                   <p className="text-slate-400 text-sm">No logs yet.</p>
                 )}
               </div>
+            </div>
+            <div className="pt-1 border-t border-slate-800">
+              <p className="text-sm text-slate-400 mb-2">
+                Dispatching archives tonight&apos;s data and removes the aircraft from active dashboards and logging lists.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleDispatch(selectedTail.tail.tail_number)}
+                disabled={dispatchingTail === selectedTail.tail.tail_number}
+                className="w-full px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 font-semibold disabled:opacity-60"
+              >
+                {dispatchingTail === selectedTail.tail.tail_number ? 'Dispatching…' : `Dispatch ${selectedTail.tail.tail_number}`}
+              </button>
             </div>
           </div>
         )}

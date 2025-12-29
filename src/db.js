@@ -155,3 +155,21 @@ export async function insertNote(payload) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Dispatch an aircraft for the current night/station.
+ * This calls a database function that atomically archives the aircraft's
+ * night_tails row, all temp_logs, and all notes into their archive tables
+ * and removes them from the active tables so dashboards stay clean.
+ */
+export async function dispatchAircraft(tail_number) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.rpc('dispatch_aircraft', {
+    p_station: defaultStation,
+    p_night_date: tonightDate(),
+    p_tail_number: tail_number,
+  });
+
+  if (error) throw error;
+  return data;
+}
