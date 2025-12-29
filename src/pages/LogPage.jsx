@@ -9,6 +9,7 @@ import {
   togglePurge,
   updateHeatSource,
   updateHeaterMode,
+  dispatchAircraft,
 } from '../db';
 import { heatSources, heaterModes } from '../utils/constants';
 import { getTempStatus } from '../utils/status';
@@ -29,6 +30,7 @@ export default function LogPage() {
   const [purgingId, setPurgingId] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [dispatching, setDispatching] = useState(false);
 
   const selectedTail = useMemo(() => tails.find((t) => t.id === selectedId), [tails, selectedId]);
 
@@ -129,6 +131,25 @@ export default function LogPage() {
     }
   };
 
+  const handleDispatch = async () => {
+    if (!selectedTail) return;
+    const confirmed = window.confirm(
+      `Dispatch ${selectedTail.tail_number}? This archives tonight's logs + notes and removes the aircraft from active lists.`,
+    );
+    if (!confirmed) return;
+    setDispatching(true);
+    try {
+      await dispatchAircraft(selectedTail.tail_number);
+      setSelectedId(null);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setDispatching(false);
+    }
+  };
+
   const latestForTail = (tailNumber) =>
     [...logs]
       .filter((log) => log.tail_number === tailNumber)
@@ -224,7 +245,7 @@ export default function LogPage() {
           </div>
 
           {selectedTail && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
               <div className="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
                 <p className="text-slate-400">Mark-In</p>
                 <button
@@ -267,6 +288,18 @@ export default function LogPage() {
                   <p className={`text-lg font-bold ${status?.color}`}>{status?.label ?? '—'}</p>
                   <p className="text-xs text-slate-400">Auto-updates from latest log</p>
                 </div>
+              </div>
+              <div className="bg-slate-900/70 border border-slate-800 rounded-lg p-3">
+                <p className="text-slate-400">Dispatch</p>
+                <p className="text-xs text-slate-400 mb-2">Move tonight&apos;s records to archive and hide from dashboards.</p>
+                <button
+                  type="button"
+                  onClick={handleDispatch}
+                  disabled={dispatching}
+                  className="mt-1 w-full px-3 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-500 disabled:opacity-60"
+                >
+                  {dispatching ? 'Dispatching…' : `Dispatch ${selectedTail.tail_number}`}
+                </button>
               </div>
             </div>
           )}
