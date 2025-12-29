@@ -3,8 +3,10 @@ import { getSupabaseClient } from './supabaseClient';
 // Shared helpers for tonight's operations
 
 export const tonightDate = () => {
+  // Use local date (not UTC) for the nightly key
   const now = new Date();
-  return now.toISOString().slice(0, 10);
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
 };
 
 const defaultStation = 'OMA';
