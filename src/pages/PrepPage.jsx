@@ -6,7 +6,7 @@ import ToggleSwitch from '../components/ToggleSwitch';
 import { useAuth } from '../hooks/useAuth';
 
 export default function PrepPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [tails, setTails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,6 +21,7 @@ export default function PrepPage() {
   });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const isAdmin = (profile?.role || '').toLowerCase() === 'admin';
 
   const resetForm = () => {
     setFormState({
@@ -84,6 +85,10 @@ export default function PrepPage() {
   };
 
   const handleDelete = async (id) => {
+    if (!isAdmin) {
+      setError('Only admins can delete aircraft.');
+      return;
+    }
     setDeletingId(id);
     try {
       await deleteNightTail(id);
@@ -265,19 +270,21 @@ export default function PrepPage() {
                           heater_mode: t.heater_mode || heaterModes[0],
                         })
                       }
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="flex-1 px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm"
-                      onClick={() => handleDelete(t.id)}
-                      disabled={deletingId === t.id}
-                    >
-                      {deletingId === t.id ? 'Removing…' : 'Delete'}
-                    </button>
+                      >
+                        Edit
+                      </button>
+                      {isAdmin && (
+                        <button
+                          className="flex-1 px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm"
+                          onClick={() => handleDelete(t.id)}
+                          disabled={deletingId === t.id}
+                        >
+                          {deletingId === t.id ? 'Removing…' : 'Delete'}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
             <div className="overflow-x-auto hidden md:block">
               <table className="min-w-full text-sm">
@@ -338,13 +345,15 @@ export default function PrepPage() {
                         >
                           Edit
                         </button>
-                        <button
-                          className="px-3 py-1 rounded bg-red-600 hover:bg-red-500"
-                          onClick={() => handleDelete(t.id)}
-                          disabled={deletingId === t.id}
-                        >
-                          {deletingId === t.id ? 'Removing…' : 'Delete'}
-                        </button>
+                        {isAdmin && (
+                          <button
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-500"
+                            onClick={() => handleDelete(t.id)}
+                            disabled={deletingId === t.id}
+                          >
+                            {deletingId === t.id ? 'Removing…' : 'Delete'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
