@@ -12,15 +12,23 @@ const stationOptions = [
 
 const ALL_TAILS = 'ALL';
 
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function formatDisplayDate(dateStr) {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const date = parseDateOnly(dateStr);
+  return date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 }
 
 function formatDateRange(startDate, endDate) {
   if (!startDate || !endDate) return '—';
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+  if (!start || !end) return '—';
   if (start.toDateString() === end.toDateString()) return formatDisplayDate(startDate);
   return `${formatDisplayDate(startDate)} – ${formatDisplayDate(endDate)}`;
 }
@@ -47,7 +55,7 @@ function summarizeTails(tails, logs) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([tailNumber, tailRecords]) => {
       const nights = [...new Set(tailRecords.map((t) => t.night_date))].sort();
-      const latestTail = [...tailRecords].sort((a, b) => new Date(b.night_date) - new Date(a.night_date))[0];
+      const latestTail = [...tailRecords].sort((a, b) => parseDateOnly(b.night_date) - parseDateOnly(a.night_date))[0];
       const logsForTail = groupedLogs[tailNumber] || [];
       const avgTemp =
         logsForTail.length > 0
