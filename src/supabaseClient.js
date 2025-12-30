@@ -7,13 +7,35 @@ const fallbackAnonKey =
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || fallbackUrl;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || fallbackAnonKey;
+const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
   console.warn('Supabase env vars missing; using provided fallback URL/key. Add them to .env for production.');
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+let serviceSupabase;
 
 export function getSupabaseClient() {
   return supabase;
+}
+
+export function getServiceSupabaseClient() {
+  if (!supabaseServiceRoleKey) return null;
+  if (!serviceSupabase) {
+    serviceSupabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return serviceSupabase;
+}
+
+export function getEphemeralSupabaseClient() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+export function getSupabaseEnv() {
+  return { supabaseUrl, supabaseAnonKey };
 }
