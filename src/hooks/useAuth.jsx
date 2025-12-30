@@ -7,13 +7,16 @@ export function AuthProvider({ children }) {
   const supabase = getSupabaseClient();
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState('');
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      setLoading(false);
+      setSessionLoading(false);
     });
 
     const {
@@ -26,7 +29,52 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  return <AuthContext.Provider value={{ session, user, loading }}>{children}</AuthContext.Provider>;
+  const loadProfile = async (userId) => {
+    if (!userId) {
+      setProfile(null);
+      setProfileError('');
+      setProfileLoading(false);
+      return;
+    }
+    setProfileLoading(true);
+    setProfileError('');
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role, station, is_active, created_at, last_sign_in_at')
+      .eq('id', userId)
+      .single();
+    if (error) {
+      console.error('Profile load failed', error);
+      setProfile(null);
+      setProfileError(error.message || 'Unable to load your profile.');
+    } else {
+      setProfile(data);
+      setProfileError('');
+    }
+    setProfileLoading(false);
+  };
+
+  useEffect(() => {
+    loadProfile(user?.id);
+  }, [user?.id]);
+
+  const loading = sessionLoading || (user && profileLoading);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        profile,
+        profileError,
+        profileLoading,
+        loading,
+        refreshProfile: () => loadProfile(user?.id),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
