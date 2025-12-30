@@ -40,3 +40,42 @@ input, select, button, textarea {
   50% { transform: scale(1.01); opacity: 0.9; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+.print-hidden {
+  /* Tailwind-like utility to hide during print */
+}
+
+@media print {
+  body {
+    background: white;
+    color: #0f172a;
+  }
+
+  header,
+  nav,
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-area {
+    background: white !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .print-area * {
+    color: inherit !important;
+  }
+
+  .print-area .bg-slate-800,
+  .print-area .bg-slate-900,
+  .print-area [class*="bg-slate-8"],
+  .print-area [class*="bg-slate-9"] {
+    background: white !important;
+  }
+
+  .print-area .border-slate-800,
+  .print-area .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+}

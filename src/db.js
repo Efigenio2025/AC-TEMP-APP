@@ -7,7 +7,7 @@ export const tonightDate = () => {
   return now.toISOString().slice(0, 10);
 };
 
-const defaultStation = 'OMA';
+export const defaultStation = 'OMA';
 
 export async function fetchNightTails() {
   const supabase = getSupabaseClient();
@@ -178,4 +178,64 @@ export async function dispatchAircraft(tail_number) {
 
   if (error) throw error;
   return data;
+}
+
+// Archive/reporting helpers (read-only)
+
+export async function fetchArchivedTails({ station = defaultStation, startDate, endDate, tailNumber }) {
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from('night_tails_archive')
+    .select('*')
+    .eq('station', station)
+    .gte('night_date', startDate)
+    .lte('night_date', endDate)
+    .order('night_date', { ascending: true })
+    .order('tail_number', { ascending: true });
+
+  if (tailNumber && tailNumber !== 'ALL') {
+    query = query.eq('tail_number', tailNumber);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchArchivedTempLogs({ station = defaultStation, startDate, endDate, tailNumber }) {
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from('temp_logs_archive')
+    .select('*')
+    .eq('station', station)
+    .gte('night_date', startDate)
+    .lte('night_date', endDate)
+    .order('recorded_at', { ascending: true });
+
+  if (tailNumber && tailNumber !== 'ALL') {
+    query = query.eq('tail_number', tailNumber);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchArchivedNotes({ station = defaultStation, startDate, endDate, tailNumber }) {
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from('notes_archive')
+    .select('*')
+    .eq('station', station)
+    .gte('night_date', startDate)
+    .lte('night_date', endDate)
+    .order('created_at', { ascending: true });
+
+  if (tailNumber && tailNumber !== 'ALL') {
+    query = query.eq('tail_number', tailNumber);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
 }
