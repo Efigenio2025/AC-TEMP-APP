@@ -1,10 +1,10 @@
 import { getSupabaseClient } from './supabaseClient';
+import { localDateString, localTimestamp } from './utils/time';
 
 // Shared helpers for tonight's operations
 
 export const tonightDate = () => {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
+  return localDateString();
 };
 
 export const defaultStation = 'OMA';
@@ -48,7 +48,7 @@ export async function markInTail(id, recordedBy) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('night_tails')
-    .update({ marked_in_at: new Date().toISOString(), recorded_by: recordedBy })
+    .update({ marked_in_at: localTimestamp(), recorded_by: recordedBy })
     .eq('id', id)
     .select()
     .single();
@@ -89,7 +89,7 @@ export async function togglePurge(id, drained, recordedBy) {
     .from('night_tails')
     .update({
       drained,
-      purged_at: drained ? new Date().toISOString() : null,
+      purged_at: drained ? localTimestamp() : null,
       recorded_by: recordedBy,
     })
     .eq('id', id)
@@ -107,7 +107,7 @@ export async function insertTempLog(payload, recordedBy) {
     .insert({
       station: defaultStation,
       night_date: tonightDate(),
-      recorded_at: new Date().toISOString(),
+      recorded_at: localTimestamp(),
       recorded_by: recordedBy,
       ...payload,
     })
@@ -151,7 +151,7 @@ export async function insertNote(payload, recordedBy) {
     .insert({
       station: defaultStation,
       night_date: tonightDate(),
-      created_at: new Date().toISOString(),
+      created_at: localTimestamp(),
       recorded_by: recordedBy,
       ...payload,
     })

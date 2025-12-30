@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { deleteNightTail, fetchNightTails, tonightDate, upsertNightTail } from '../db';
 import { heatSources, heaterModes, locations } from '../utils/constants';
+import { localTimestamp } from '../utils/time';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { useAuth } from '../hooks/useAuth';
 
@@ -68,7 +69,7 @@ export default function PrepPage() {
           heat_source: formState.heat_source,
           drained: formState.drained,
           heater_mode: formState.heater_mode,
-          purged_at: formState.drained ? new Date().toISOString() : null,
+          purged_at: formState.drained ? localTimestamp() : null,
         },
         user?.email,
       );
