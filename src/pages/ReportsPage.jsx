@@ -5,6 +5,7 @@ import {
   fetchArchivedTails,
   fetchArchivedTempLogs,
 } from '../db';
+import { localDateString } from '../utils/time';
 
 const stationOptions = [
   { value: defaultStation, label: 'OMA' },
@@ -80,7 +81,7 @@ function summarizeTails(tails, logs) {
 }
 
 export default function ReportsPage() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateString();
   const [station, setStation] = useState(defaultStation);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
