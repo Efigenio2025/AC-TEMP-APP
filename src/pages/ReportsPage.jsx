@@ -12,15 +12,23 @@ const stationOptions = [
 
 const ALL_TAILS = 'ALL';
 
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function formatDisplayDate(dateStr) {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const date = parseDateOnly(dateStr);
+  return date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 }
 
 function formatDateRange(startDate, endDate) {
   if (!startDate || !endDate) return '—';
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+  if (!start || !end) return '—';
   if (start.toDateString() === end.toDateString()) return formatDisplayDate(startDate);
   return `${formatDisplayDate(startDate)} – ${formatDisplayDate(endDate)}`;
 }
@@ -47,7 +55,7 @@ function summarizeTails(tails, logs) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([tailNumber, tailRecords]) => {
       const nights = [...new Set(tailRecords.map((t) => t.night_date))].sort();
-      const latestTail = [...tailRecords].sort((a, b) => new Date(b.night_date) - new Date(a.night_date))[0];
+      const latestTail = [...tailRecords].sort((a, b) => parseDateOnly(b.night_date) - parseDateOnly(a.night_date))[0];
       const logsForTail = groupedLogs[tailNumber] || [];
       const avgTemp =
         logsForTail.length > 0
@@ -393,23 +401,36 @@ export default function ReportsPage() {
                     </div>
                     {includeTempLogs && (
                       <div className="px-4 py-3 border-t border-slate-800">
-                        <p className="text-sm font-semibold text-slate-200 mb-2">Temperature Logs ({logsForTail.length})</p>
+                        <p className="text-sm font-semibold text-slate-200 mb-3">Temperature Logs ({logsForTail.length})</p>
                         {logsForTail.length === 0 ? (
                           <p className="text-slate-400 text-sm">No logs recorded.</p>
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                            {logsForTail
-                              .slice()
-                              .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at))
-                              .map((log) => (
-                                <div key={log.id || `${log.tail_number}-${log.recorded_at}`} className="bg-slate-900/70 border border-slate-800 rounded-lg px-3 py-2">
-                                  <p className="font-semibold text-slate-50">{Number(log.temp_f).toFixed(1)}°F</p>
-                                  <p className="text-slate-400 text-xs">
-                                    {new Date(log.recorded_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                  </p>
-                                  {log.recorded_by && <p className="text-xs text-slate-400">By {log.recorded_by}</p>}
-                                </div>
-                              ))}
+                          <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/70">
+                            <table className="min-w-full text-sm text-left">
+                              <thead className="bg-slate-800/60 text-slate-300">
+                                <tr>
+                                  <th className="px-3 py-2 font-semibold">Temperature (°F)</th>
+                                  <th className="px-3 py-2 font-semibold">Recorded At</th>
+                                  <th className="px-3 py-2 font-semibold">Recorded By</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800 text-slate-100">
+                                {logsForTail
+                                  .slice()
+                                  .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at))
+                                  .map((log) => (
+                                    <tr key={log.id || `${log.tail_number}-${log.recorded_at}`} className="hover:bg-slate-900/60">
+                                      <td className="px-3 py-2 font-semibold">{Number(log.temp_f).toFixed(1)}°F</td>
+                                      <td className="px-3 py-2 text-slate-200">
+                                        {new Date(log.recorded_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </td>
+                                      <td className="px-3 py-2 text-slate-300">
+                                        {log.recorded_by || log.recorder || log.user_email || '—'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
                           </div>
                         )}
                       </div>
