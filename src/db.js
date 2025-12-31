@@ -1,10 +1,10 @@
 import { getSupabaseClient } from './supabaseClient';
-import { localDateString, localTimestamp } from './utils/time';
+import { localNightDateString, localTimestamp } from './utils/time';
 
 // Shared helpers for tonight's operations
 
 export const tonightDate = () => {
-  return localDateString();
+  return localNightDateString();
 };
 
 export const defaultStation = 'OMA';
