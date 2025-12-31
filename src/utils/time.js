@@ -4,6 +4,17 @@ export function localDateString(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+// Returns the "night ops" date, which sticks to the previous calendar day
+// until the specified rollover hour (local time). This keeps overnight shifts
+// from flipping to a new "night" at midnight.
+export function localNightDateString(date = new Date(), rolloverHour = 12) {
+  const local = new Date(date);
+  if (local.getHours() < rolloverHour) {
+    local.setDate(local.getDate() - 1);
+  }
+  return localDateString(local);
+}
+
 export function localTimestamp(date = new Date()) {
   const offsetMinutes = date.getTimezoneOffset();
   const sign = offsetMinutes > 0 ? '-' : '+';
