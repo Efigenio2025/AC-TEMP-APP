@@ -43,9 +43,9 @@ function sortTempLogs(logs = []) {
 function TempSparkline({ logs }) {
   const sortedLogs = sortTempLogs(logs);
   const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
-  const width = 480;
-  const height = 180;
-  const padding = 24;
+  const width = 520;
+  const height = 220;
+  const padding = 32;
 
   if (!sortedLogs.length) {
     return <p className="text-xs text-slate-400">No temperature logs recorded.</p>;
@@ -100,16 +100,16 @@ function TempSparkline({ logs }) {
 
   return (
     <div className="space-y-2">
-      <svg width={width} height={height} className="block rounded bg-slate-900/70 border border-slate-800">
+      <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
-        <text x={yAxisX - 8} y={padding + 6} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <text x={yAxisX - 10} y={padding - 6} textAnchor="end" dominantBaseline="hanging" className="fill-slate-400 text-[9px]">
           {max.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 8} y={padding + usableHeight / 2 + 4} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <text x={yAxisX - 10} y={padding + usableHeight / 2 - 4} textAnchor="end" className="fill-slate-400 text-[9px]">
           {averageTemp.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 8} y={xAxisY} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <text x={yAxisX - 10} y={xAxisY + 6} textAnchor="end" dominantBaseline="text-before-edge" className="fill-slate-400 text-[9px]">
           {min.toFixed(1)}°F
         </text>
         <text x={yAxisX} y={height - 6} textAnchor="start" className="fill-slate-400 text-[9px]">
@@ -463,7 +463,7 @@ export default function ReportsPage() {
                             {openTail === row.tailNumber ? 'Hide graph' : 'View graph'}
                           </button>
                           {openTail === row.tailNumber && (
-                            <div className="absolute right-0 mt-2 w-[36rem] rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-xl z-10">
+                            <div className="absolute right-0 mt-2 w-[40rem] rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-xl z-10">
                               <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
                                 <span className="font-semibold">{row.tailNumber} Temps</span>
                                 <button
