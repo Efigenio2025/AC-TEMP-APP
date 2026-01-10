@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   defaultStation,
   fetchArchivedNotes,
@@ -449,39 +449,45 @@ export default function ReportsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {summaryRows.map((row) => (
-                      <tr key={row.tailNumber} className="hover:bg-slate-900/60">
-                        <td className="py-2 font-semibold">{row.tailNumber}</td>
-                        <td>{row.dateLabel}</td>
-                        <td>{row.heatSource}</td>
-                        <td>{row.averageTemp !== null && row.averageTemp !== undefined ? `${row.averageTemp.toFixed(1)}°F` : '—'}</td>
-                        <td className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenTail((current) => (current === row.tailNumber ? null : row.tailNumber))}
-                            className="text-xs font-semibold text-brand hover:text-brand-light underline underline-offset-2"
-                          >
-                            {openTail === row.tailNumber ? 'Hide graph' : 'View graph'}
-                          </button>
-                          {openTail === row.tailNumber && (
-                            <div className="absolute right-0 mt-2 w-[40rem] rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-xl z-10">
-                              <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
-                                <span className="font-semibold">{row.tailNumber} Temps</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenTail(null)}
-                                  className="text-slate-400 hover:text-slate-200"
-                                >
-                                  Close
-                                </button>
+                      <Fragment key={row.tailNumber}>
+                        <tr className="hover:bg-slate-900/60">
+                          <td className="py-2 font-semibold">{row.tailNumber}</td>
+                          <td>{row.dateLabel}</td>
+                          <td>{row.heatSource}</td>
+                          <td>{row.averageTemp !== null && row.averageTemp !== undefined ? `${row.averageTemp.toFixed(1)}°F` : '—'}</td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={() => setOpenTail((current) => (current === row.tailNumber ? null : row.tailNumber))}
+                              className="text-xs font-semibold text-brand hover:text-brand-light underline underline-offset-2"
+                            >
+                              {openTail === row.tailNumber ? 'Hide graph' : 'View graph'}
+                            </button>
+                          </td>
+                          <td>{row.recordedBy}</td>
+                          <td>{row.purgedStatus}</td>
+                        </tr>
+                        {openTail === row.tailNumber && (
+                          <tr className="bg-slate-900/60">
+                            <td colSpan={7} className="py-3">
+                              <div className="w-full rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-inner">
+                                <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
+                                  <span className="font-semibold">{row.tailNumber} Temps</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenTail(null)}
+                                    className="text-slate-400 hover:text-slate-200"
+                                  >
+                                    Close
+                                  </button>
+                                </div>
+                                <TempSparkline logs={row.logs} />
+                                <p className="mt-2 text-[11px] text-slate-400">{row.logs.length} log(s) recorded.</p>
                               </div>
-                              <TempSparkline logs={row.logs} />
-                              <p className="mt-2 text-[11px] text-slate-400">{row.logs.length} log(s) recorded.</p>
-                            </div>
-                          )}
-                        </td>
-                        <td>{row.recordedBy}</td>
-                        <td>{row.purgedStatus}</td>
-                      </tr>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                   <tfoot className="text-slate-200 font-semibold border-t border-slate-700">
