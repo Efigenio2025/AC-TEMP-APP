@@ -34,6 +34,59 @@ function formatDateRange(startDate, endDate) {
   return `${formatDisplayDate(startDate)} – ${formatDisplayDate(endDate)}`;
 }
 
+function sortTempLogs(logs = []) {
+  return logs
+    .slice()
+    .sort((a, b) => new Date(a.recorded_at || a.created_at) - new Date(b.recorded_at || b.created_at));
+}
+
+function TempSparkline({ logs }) {
+  const sortedLogs = sortTempLogs(logs);
+  const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
+  const width = 180;
+  const height = 60;
+  const padding = 6;
+
+  if (!sortedLogs.length) {
+    return <p className="text-xs text-slate-400">No temperature logs recorded.</p>;
+  }
+
+  const min = Math.min(...temps);
+  const max = Math.max(...temps);
+  const latestTemp = temps[temps.length - 1];
+  const range = max - min || 1;
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+  const points = temps
+    .map((temp, index) => {
+      const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
+      const y = padding + ((max - temp) / range) * usableHeight;
+      return `${x},${y}`;
+    })
+    .join(' ');
+  const lastIndex = temps.length - 1;
+  const lastX = temps.length === 1 ? width / 2 : padding + (lastIndex / (temps.length - 1)) * usableWidth;
+  const lastY = padding + ((max - latestTemp) / range) * usableHeight;
+
+  return (
+    <div className="space-y-2">
+      <svg width={width} height={height} className="block rounded bg-slate-900/70 border border-slate-800">
+        <polyline
+          fill="none"
+          stroke="rgb(56 189 248)"
+          strokeWidth="2"
+          points={points}
+        />
+        <circle cx={lastX} cy={lastY} r="3" fill="rgb(251 191 36)" />
+      </svg>
+      <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-300">
+        <span>Latest: {latestTemp.toFixed(1)}°F</span>
+        <span>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</span>
+      </div>
+    </div>
+  );
+}
+
 function findRecorder(logsForTail = []) {
   const recorder = logsForTail.find((log) => log.recorded_by || log.recorder || log.created_by || log.user_email);
   return recorder?.recorded_by || recorder?.recorder || recorder?.created_by || recorder?.user_email || '—';
@@ -96,6 +149,7 @@ export default function ReportsPage() {
   const [notes, setNotes] = useState([]);
   const [tailOptions, setTailOptions] = useState([]);
   const [ranReport, setRanReport] = useState(false);
+  const [openTail, setOpenTail] = useState(null);
 
   const summaryRows = useMemo(() => summarizeTails(tails, logs), [tails, logs]);
 
@@ -327,6 +381,7 @@ export default function ReportsPage() {
                       <th>Date(s) Covered</th>
                       <th>Heat Source</th>
                       <th>Average Temp</th>
+                      <th>Temp Trend</th>
                       <th>Recorded By</th>
                       <th>Purged Status</th>
                     </tr>
@@ -338,6 +393,31 @@ export default function ReportsPage() {
                         <td>{row.dateLabel}</td>
                         <td>{row.heatSource}</td>
                         <td>{row.averageTemp !== null && row.averageTemp !== undefined ? `${row.averageTemp.toFixed(1)}°F` : '—'}</td>
+                        <td className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenTail((current) => (current === row.tailNumber ? null : row.tailNumber))}
+                            className="text-xs font-semibold text-brand hover:text-brand-light underline underline-offset-2"
+                          >
+                            {openTail === row.tailNumber ? 'Hide graph' : 'View graph'}
+                          </button>
+                          {openTail === row.tailNumber && (
+                            <div className="absolute right-0 mt-2 w-64 rounded-lg border border-slate-700 bg-slate-950/95 p-3 shadow-xl z-10">
+                              <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
+                                <span className="font-semibold">{row.tailNumber} Temps</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenTail(null)}
+                                  className="text-slate-400 hover:text-slate-200"
+                                >
+                                  Close
+                                </button>
+                              </div>
+                              <TempSparkline logs={row.logs} />
+                              <p className="mt-2 text-[11px] text-slate-400">{row.logs.length} log(s) recorded.</p>
+                            </div>
+                          )}
+                        </td>
                         <td>{row.recordedBy}</td>
                         <td>{row.purgedStatus}</td>
                       </tr>
