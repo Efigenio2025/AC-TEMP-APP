@@ -43,9 +43,9 @@ function sortTempLogs(logs = []) {
 function TempSparkline({ logs }) {
   const sortedLogs = sortTempLogs(logs);
   const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
-  const width = 520;
-  const height = 220;
-  const padding = 32;
+  const width = 568;
+  const height = 218;
+  const padding = 24;
 
   if (!sortedLogs.length) {
     return <p className="text-xs text-slate-400">No temperature logs recorded.</p>;
