@@ -138,9 +138,6 @@ function TempSparkline({ logs }) {
         <text x={yAxisX - 14} y={midY - 6} textAnchor="end" className="fill-slate-400 text-[9px]">
           {baselineTemp.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 14} y={padding + usableHeight / 2 + 6} textAnchor="end" className="fill-slate-400 text-[9px]">
-          {averageTemp.toFixed(1)}°F
-        </text>
         <text x={yAxisX - 14} y={xAxisY + 8} textAnchor="end" dominantBaseline="text-before-edge" className="fill-slate-400 text-[9px]">
           {bottomTemp.toFixed(1)}°F
         </text>
