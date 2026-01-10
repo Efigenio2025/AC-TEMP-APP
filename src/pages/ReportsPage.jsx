@@ -91,23 +91,46 @@ function TempSparkline({ logs }) {
   const usableHeight = height - padding * 2;
   const yAxisX = padding;
   const xAxisY = height - padding;
-  const points = temps
-    .map((temp, index) => {
-      const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
-      const y = padding + ((topTemp - temp) / range) * usableHeight;
-      return `${x},${y}`;
-    })
-    .join(' ');
-  const lastIndex = temps.length - 1;
-  const lastX = temps.length === 1 ? width / 2 : padding + (lastIndex / (temps.length - 1)) * usableWidth;
-  const lastY = padding + ((topTemp - latestTemp) / range) * usableHeight;
+  const plottedPoints = temps.map((temp, index) => {
+    const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
+    const y = padding + ((topTemp - temp) / range) * usableHeight;
+    return { x, y };
+  });
+  const points = plottedPoints.map((point) => `${point.x},${point.y}`).join(' ');
+  const lastPoint = plottedPoints[plottedPoints.length - 1];
+  const lastX = lastPoint?.x ?? width / 2;
+  const lastY = lastPoint?.y ?? height / 2;
   const midY = padding + ((topTemp - baselineTemp) / range) * usableHeight;
 
   return (
     <div className="space-y-2">
       <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
+        <defs>
+          <linearGradient id="tempTrendLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgb(56 189 248)" />
+            <stop offset="70%" stopColor="rgb(125 211 252)" />
+            <stop offset="100%" stopColor="rgb(250 204 21)" />
+          </linearGradient>
+        </defs>
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
+        <line x1={yAxisX} y1={padding} x2={width - padding} y2={padding} stroke="rgb(71 85 105 / 0.4)" strokeWidth="1" strokeDasharray="3 4" />
+        <line x1={yAxisX} y1={padding + usableHeight / 2} x2={width - padding} y2={padding + usableHeight / 2} stroke="rgb(71 85 105 / 0.35)" strokeWidth="1" strokeDasharray="3 4" />
+        <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105 / 0.4)" strokeWidth="1" strokeDasharray="3 4" />
+        {[0.2, 0.4, 0.6, 0.8].map((step) => {
+          const x = padding + usableWidth * step;
+          return (
+            <line
+              key={`grid-${step}`}
+              x1={x}
+              y1={padding}
+              x2={x}
+              y2={xAxisY}
+              stroke="rgb(71 85 105 / 0.25)"
+              strokeWidth="1"
+            />
+          );
+        })}
         <text x={yAxisX - 14} y={padding - 8} textAnchor="end" dominantBaseline="hanging" className="fill-slate-400 text-[9px]">
           {topTemp.toFixed(1)}°F
         </text>
@@ -132,11 +155,22 @@ function TempSparkline({ logs }) {
         </text>
         <polyline
           fill="none"
-          stroke="rgb(56 189 248)"
-          strokeWidth="2"
+          stroke="url(#tempTrendLine)"
+          strokeWidth="3"
           points={points}
         />
-        <circle cx={lastX} cy={lastY} r="3" fill="rgb(251 191 36)" />
+        {plottedPoints.map((point, index) => (
+          <circle
+            key={`dot-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={index === plottedPoints.length - 1 ? 6 : 4}
+            fill={index === plottedPoints.length - 1 ? 'rgb(250 204 21)' : 'rgb(125 211 252)'}
+            stroke="rgb(15 23 42)"
+            strokeWidth="2"
+          />
+        ))}
+        <circle cx={lastX} cy={lastY} r="10" fill="rgb(250 204 21 / 0.2)" />
       </svg>
       <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2 sm:items-center">
         <div className="space-y-1 text-center sm:text-left">
