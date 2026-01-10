@@ -53,6 +53,10 @@ function TempSparkline({ logs }) {
 
   const min = Math.min(...temps);
   const max = Math.max(...temps);
+  const baselineTemp = 50;
+  const maxDeviation = Math.max(Math.abs(max - baselineTemp), Math.abs(min - baselineTemp)) || 1;
+  const topTemp = baselineTemp + maxDeviation;
+  const bottomTemp = baselineTemp - maxDeviation;
   const latestTemp = temps[temps.length - 1];
   const firstLog = sortedLogs[0];
   const lastLog = sortedLogs[sortedLogs.length - 1];
@@ -82,7 +86,7 @@ function TempSparkline({ logs }) {
     minute: '2-digit',
   });
   const gainLossLabel = averageRate === null ? 'Avg/hr' : `Avg/hr (${averageRate >= 0 ? 'Gain' : 'Loss'})`;
-  const range = max - min || 1;
+  const range = maxDeviation * 2;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
   const yAxisX = padding;
@@ -90,27 +94,32 @@ function TempSparkline({ logs }) {
   const points = temps
     .map((temp, index) => {
       const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
-      const y = padding + ((max - temp) / range) * usableHeight;
+      const y = padding + ((topTemp - temp) / range) * usableHeight;
       return `${x},${y}`;
     })
     .join(' ');
   const lastIndex = temps.length - 1;
   const lastX = temps.length === 1 ? width / 2 : padding + (lastIndex / (temps.length - 1)) * usableWidth;
-  const lastY = padding + ((max - latestTemp) / range) * usableHeight;
+  const lastY = padding + ((topTemp - latestTemp) / range) * usableHeight;
+  const midY = padding + ((topTemp - baselineTemp) / range) * usableHeight;
 
   return (
     <div className="space-y-2">
       <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
-        <text x={yAxisX - 10} y={padding - 6} textAnchor="end" dominantBaseline="hanging" className="fill-slate-400 text-[9px]">
-          {max.toFixed(1)}°F
+        <text x={yAxisX - 14} y={padding - 8} textAnchor="end" dominantBaseline="hanging" className="fill-slate-400 text-[9px]">
+          {topTemp.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 10} y={padding + usableHeight / 2 - 4} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <line x1={yAxisX} y1={midY} x2={width - padding} y2={midY} stroke="rgb(71 85 105)" strokeWidth="1" strokeDasharray="4 4" />
+        <text x={yAxisX - 14} y={midY - 6} textAnchor="end" className="fill-slate-400 text-[9px]">
+          {baselineTemp.toFixed(1)}°F
+        </text>
+        <text x={yAxisX - 14} y={padding + usableHeight / 2 + 6} textAnchor="end" className="fill-slate-400 text-[9px]">
           {averageTemp.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 10} y={xAxisY + 6} textAnchor="end" dominantBaseline="text-before-edge" className="fill-slate-400 text-[9px]">
-          {min.toFixed(1)}°F
+        <text x={yAxisX - 14} y={xAxisY + 8} textAnchor="end" dominantBaseline="text-before-edge" className="fill-slate-400 text-[9px]">
+          {bottomTemp.toFixed(1)}°F
         </text>
         <text x={yAxisX} y={height - 6} textAnchor="start" className="fill-slate-400 text-[9px]">
           {startLabel}
