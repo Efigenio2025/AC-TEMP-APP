@@ -75,6 +75,13 @@ function TempSparkline({ logs }) {
     hour: '2-digit',
     minute: '2-digit',
   });
+  const midTimestamp = new Date(firstTimestamp + (lastTimestamp - firstTimestamp) / 2).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const gainLossLabel = averageRate === null ? 'Avg/hr' : `Avg/hr (${averageRate >= 0 ? 'Gain' : 'Loss'})`;
   const range = max - min || 1;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
@@ -96,14 +103,20 @@ function TempSparkline({ logs }) {
       <svg width={width} height={height} className="block rounded bg-slate-900/70 border border-slate-800">
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
-        <text x={yAxisX - 6} y={padding + 6} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <text x={yAxisX - 8} y={padding + 6} textAnchor="end" className="fill-slate-400 text-[9px]">
           {max.toFixed(1)}°F
         </text>
-        <text x={yAxisX - 6} y={xAxisY} textAnchor="end" className="fill-slate-400 text-[9px]">
+        <text x={yAxisX - 8} y={padding + usableHeight / 2 + 4} textAnchor="end" className="fill-slate-400 text-[9px]">
+          {averageTemp.toFixed(1)}°F
+        </text>
+        <text x={yAxisX - 8} y={xAxisY} textAnchor="end" className="fill-slate-400 text-[9px]">
           {min.toFixed(1)}°F
         </text>
         <text x={yAxisX} y={height - 6} textAnchor="start" className="fill-slate-400 text-[9px]">
           {startLabel}
+        </text>
+        <text x={width / 2} y={height - 6} textAnchor="middle" className="fill-slate-400 text-[9px]">
+          {midTimestamp}
         </text>
         <text x={width - padding} y={height - 6} textAnchor="end" className="fill-slate-400 text-[9px]">
           {endLabel}
@@ -116,15 +129,15 @@ function TempSparkline({ logs }) {
         />
         <circle cx={lastX} cy={lastY} r="3" fill="rgb(251 191 36)" />
       </svg>
-      <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2">
-        <div className="space-y-1">
+      <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2 sm:items-center">
+        <div className="space-y-1 text-center sm:text-left">
           <p>Latest: {latestTemp.toFixed(1)}°F</p>
           <p>Average: {averageTemp.toFixed(1)}°F</p>
           <p>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</p>
         </div>
-        <div className="space-y-1 sm:text-right">
+        <div className="space-y-1 text-center sm:text-right">
           <p>
-            Avg/hr:{' '}
+            {gainLossLabel}:{' '}
             {averageRate !== null ? `${averageRate >= 0 ? '+' : ''}${averageRate.toFixed(2)}°F` : '—'}
           </p>
           <p>Duration: {durationLabel}</p>
