@@ -41,6 +41,7 @@ function sortTempLogs(logs = []) {
 }
 
 function TempSparkline({ logs }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
   const sortedLogs = sortTempLogs(logs);
   const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
   const width = 568;
@@ -96,6 +97,14 @@ function TempSparkline({ logs }) {
     const y = padding + ((topTemp - temp) / range) * usableHeight;
     return { x, y };
   });
+  const hoveredPoint = hoveredIndex !== null ? plottedPoints[hoveredIndex] : null;
+  const hoveredTemp = hoveredIndex !== null ? temps[hoveredIndex] : null;
+  const hoveredDelta =
+    hoveredIndex !== null && hoveredIndex > 0 ? hoveredTemp - temps[hoveredIndex - 1] : null;
+  const hoveredDeltaLabel =
+    hoveredDelta === null ? '—' : `${hoveredDelta >= 0 ? '+' : ''}${hoveredDelta.toFixed(1)}°F`;
+  const hoveredDeltaType =
+    hoveredDelta === null ? '—' : hoveredDelta >= 0 ? 'Gain' : 'Loss';
   const points = plottedPoints.map((point) => `${point.x},${point.y}`).join(' ');
   const lastPoint = plottedPoints[plottedPoints.length - 1];
   const lastX = lastPoint?.x ?? width / 2;
@@ -104,7 +113,8 @@ function TempSparkline({ logs }) {
 
   return (
     <div className="space-y-2">
-      <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
+      <div className="relative w-fit">
+        <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
         <defs>
           <linearGradient id="tempTrendLine" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="rgb(56 189 248)" />
@@ -165,10 +175,28 @@ function TempSparkline({ logs }) {
             fill={index === plottedPoints.length - 1 ? 'rgb(250 204 21)' : 'rgb(125 211 252)'}
             stroke="rgb(15 23 42)"
             strokeWidth="2"
+            className="cursor-pointer"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            onFocus={() => setHoveredIndex(index)}
+            onBlur={() => setHoveredIndex(null)}
+            tabIndex={0}
           />
         ))}
         <circle cx={lastX} cy={lastY} r="10" fill="rgb(250 204 21 / 0.2)" />
       </svg>
+      {hoveredPoint && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-full rounded-md border border-slate-700 bg-slate-950/95 px-2 py-1 text-[11px] text-slate-100 shadow-lg"
+          style={{ left: hoveredPoint.x, top: hoveredPoint.y }}
+        >
+          <div className="font-semibold">{hoveredTemp.toFixed(1)}°F</div>
+          <div className="text-slate-300">
+            {hoveredDeltaType}: {hoveredDeltaLabel}
+          </div>
+        </div>
+      )}
+      </div>
       <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2 sm:items-center">
         <div className="space-y-1 text-center sm:text-left">
           <p>Latest: {latestTemp.toFixed(1)}°F</p>
@@ -253,6 +281,7 @@ export default function ReportsPage() {
   const [openTail, setOpenTail] = useState(null);
 
   const summaryRows = useMemo(() => summarizeTails(tails, logs), [tails, logs]);
+  const activeRow = useMemo(() => summaryRows.find((row) => row.tailNumber === openTail), [summaryRows, openTail]);
 
   const totals = useMemo(() => {
     const allTemps = logs.map((log) => Number(log.temp_f || 0));
@@ -507,26 +536,6 @@ export default function ReportsPage() {
                           <td>{row.recordedBy}</td>
                           <td>{row.purgedStatus}</td>
                         </tr>
-                        {openTail === row.tailNumber && (
-                          <tr className="bg-slate-900/60">
-                            <td colSpan={7} className="py-3">
-                              <div className="w-full rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-inner">
-                                <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
-                                  <span className="font-semibold">{row.tailNumber} Temps</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setOpenTail(null)}
-                                    className="text-slate-400 hover:text-slate-200"
-                                  >
-                                    Close
-                                  </button>
-                                </div>
-                                <TempSparkline logs={row.logs} />
-                                <p className="mt-2 text-[11px] text-slate-400">{row.logs.length} log(s) recorded.</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
                       </Fragment>
                     ))}
                   </tbody>
@@ -670,6 +679,24 @@ export default function ReportsPage() {
             </div>
           </div>
         </>
+      )}
+      {openTail && activeRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 py-6">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-4 text-sm text-slate-300">
+              <span className="font-semibold">{activeRow.tailNumber} Temps</span>
+              <button
+                type="button"
+                onClick={() => setOpenTail(null)}
+                className="rounded-full border border-slate-600 px-3 py-1 text-slate-200 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+            <TempSparkline logs={activeRow.logs} />
+            <p className="mt-2 text-[11px] text-slate-400">{activeRow.logs.length} log(s) recorded.</p>
+          </div>
+        </div>
       )}
     </div>
   );
