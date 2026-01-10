@@ -43,9 +43,9 @@ function sortTempLogs(logs = []) {
 function TempSparkline({ logs }) {
   const sortedLogs = sortTempLogs(logs);
   const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
-  const width = 180;
-  const height = 60;
-  const padding = 6;
+  const width = 240;
+  const height = 90;
+  const padding = 10;
 
   if (!sortedLogs.length) {
     return <p className="text-xs text-slate-400">No temperature logs recorded.</p>;
@@ -54,6 +54,12 @@ function TempSparkline({ logs }) {
   const min = Math.min(...temps);
   const max = Math.max(...temps);
   const latestTemp = temps[temps.length - 1];
+  const firstLog = sortedLogs[0];
+  const lastLog = sortedLogs[sortedLogs.length - 1];
+  const firstTimestamp = new Date(firstLog.recorded_at || firstLog.created_at).getTime();
+  const lastTimestamp = new Date(lastLog.recorded_at || lastLog.created_at).getTime();
+  const hoursElapsed = (lastTimestamp - firstTimestamp) / (1000 * 60 * 60);
+  const averageRate = hoursElapsed > 0 ? (latestTemp - temps[0]) / hoursElapsed : null;
   const range = max - min || 1;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
@@ -79,9 +85,12 @@ function TempSparkline({ logs }) {
         />
         <circle cx={lastX} cy={lastY} r="3" fill="rgb(251 191 36)" />
       </svg>
-      <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
         <span>Latest: {latestTemp.toFixed(1)}°F</span>
         <span>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</span>
+        <span>
+          Avg/hr: {averageRate !== null ? `${averageRate >= 0 ? '+' : ''}${averageRate.toFixed(2)}°F` : '—'}
+        </span>
       </div>
     </div>
   );
@@ -402,7 +411,7 @@ export default function ReportsPage() {
                             {openTail === row.tailNumber ? 'Hide graph' : 'View graph'}
                           </button>
                           {openTail === row.tailNumber && (
-                            <div className="absolute right-0 mt-2 w-64 rounded-lg border border-slate-700 bg-slate-950/95 p-3 shadow-xl z-10">
+                            <div className="absolute right-0 mt-2 w-80 rounded-lg border border-slate-700 bg-slate-950/95 p-4 shadow-xl z-10">
                               <div className="flex items-center justify-between mb-2 text-xs text-slate-300">
                                 <span className="font-semibold">{row.tailNumber} Temps</span>
                                 <button
