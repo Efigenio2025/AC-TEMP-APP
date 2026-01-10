@@ -60,6 +60,21 @@ function TempSparkline({ logs }) {
   const lastTimestamp = new Date(lastLog.recorded_at || lastLog.created_at).getTime();
   const hoursElapsed = (lastTimestamp - firstTimestamp) / (1000 * 60 * 60);
   const averageRate = hoursElapsed > 0 ? (latestTemp - temps[0]) / hoursElapsed : null;
+  const averageTemp = temps.reduce((sum, temp) => sum + temp, 0) / temps.length;
+  const durationLabel =
+    hoursElapsed > 0 ? `${hoursElapsed.toFixed(1)} hr${hoursElapsed >= 1.5 ? 's' : ''}` : '—';
+  const startLabel = new Date(firstLog.recorded_at || firstLog.created_at).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const endLabel = new Date(lastLog.recorded_at || lastLog.created_at).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   const range = max - min || 1;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
@@ -85,12 +100,20 @@ function TempSparkline({ logs }) {
         />
         <circle cx={lastX} cy={lastY} r="3" fill="rgb(251 191 36)" />
       </svg>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
-        <span>Latest: {latestTemp.toFixed(1)}°F</span>
-        <span>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</span>
-        <span>
-          Avg/hr: {averageRate !== null ? `${averageRate >= 0 ? '+' : ''}${averageRate.toFixed(2)}°F` : '—'}
-        </span>
+      <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2">
+        <div className="space-y-1">
+          <p>Latest: {latestTemp.toFixed(1)}°F</p>
+          <p>Average: {averageTemp.toFixed(1)}°F</p>
+          <p>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</p>
+        </div>
+        <div className="space-y-1 sm:text-right">
+          <p>
+            Avg/hr:{' '}
+            {averageRate !== null ? `${averageRate >= 0 ? '+' : ''}${averageRate.toFixed(2)}°F` : '—'}
+          </p>
+          <p>Duration: {durationLabel}</p>
+          <p>Window: {startLabel} → {endLabel}</p>
+        </div>
       </div>
     </div>
   );
