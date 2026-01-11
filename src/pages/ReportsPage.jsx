@@ -124,8 +124,8 @@ function TempSparkline({ logs }) {
         </defs>
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
-        {Array.from({ length: (chartMax - chartMin) / 5 + 1 }, (_, index) => {
-          const temp = chartMin + index * 5;
+        {Array.from({ length: (chartMax - chartMin) / 15 + 1 }, (_, index) => {
+          const temp = chartMin + index * 15;
           const y = padding + ((chartMax - temp) / range) * usableHeight;
           return (
             <g key={`tick-${temp}`}>
