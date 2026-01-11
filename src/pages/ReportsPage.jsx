@@ -113,7 +113,7 @@ function TempSparkline({ logs }) {
 
   return (
     <div className="space-y-2">
-      <div className="relative w-fit">
+      <div className="relative mx-auto w-fit">
         <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
         <defs>
           <linearGradient id="tempTrendLine" x1="0" y1="0" x2="1" y2="0">
@@ -693,7 +693,9 @@ export default function ReportsPage() {
                 Close
               </button>
             </div>
-            <TempSparkline logs={activeRow.logs} />
+            <div className="flex justify-center">
+              <TempSparkline logs={activeRow.logs} />
+            </div>
             <p className="mt-2 text-[11px] text-slate-400">{activeRow.logs.length} log(s) recorded.</p>
           </div>
         </div>
