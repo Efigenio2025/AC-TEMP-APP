@@ -54,10 +54,9 @@ function TempSparkline({ logs }) {
 
   const min = Math.min(...temps);
   const max = Math.max(...temps);
-  const baselineTemp = 50;
-  const maxDeviation = Math.max(Math.abs(max - baselineTemp), Math.abs(min - baselineTemp)) || 1;
-  const topTemp = baselineTemp + maxDeviation;
-  const bottomTemp = baselineTemp - maxDeviation;
+  const chartMin = 30;
+  const chartMax = 130;
+  const thresholdTemps = [50, 70, 90];
   const latestTemp = temps[temps.length - 1];
   const firstLog = sortedLogs[0];
   const lastLog = sortedLogs[sortedLogs.length - 1];
@@ -80,21 +79,15 @@ function TempSparkline({ logs }) {
     hour: '2-digit',
     minute: '2-digit',
   });
-  const midTimestamp = new Date(firstTimestamp + (lastTimestamp - firstTimestamp) / 2).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
   const gainLossLabel = averageRate === null ? 'Avg/hr' : `Avg/hr (${averageRate >= 0 ? 'Gain' : 'Loss'})`;
-  const range = maxDeviation * 2;
+  const range = chartMax - chartMin;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
   const yAxisX = padding;
   const xAxisY = height - padding;
   const plottedPoints = temps.map((temp, index) => {
     const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
-    const y = padding + ((topTemp - temp) / range) * usableHeight;
+    const y = padding + ((chartMax - temp) / range) * usableHeight;
     return { x, y };
   });
   const hoveredPoint = hoveredIndex !== null ? plottedPoints[hoveredIndex] : null;
@@ -109,7 +102,14 @@ function TempSparkline({ logs }) {
   const lastPoint = plottedPoints[plottedPoints.length - 1];
   const lastX = lastPoint?.x ?? width / 2;
   const lastY = lastPoint?.y ?? height / 2;
-  const midY = padding + ((topTemp - baselineTemp) / range) * usableHeight;
+  const timeLabels = sortedLogs.map((log) =>
+    new Date(log.recorded_at || log.created_at).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+  );
 
   return (
     <div className="space-y-2">
@@ -124,9 +124,47 @@ function TempSparkline({ logs }) {
         </defs>
         <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
         <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
-        <line x1={yAxisX} y1={padding} x2={width - padding} y2={padding} stroke="rgb(71 85 105 / 0.4)" strokeWidth="1" strokeDasharray="3 4" />
-        <line x1={yAxisX} y1={padding + usableHeight / 2} x2={width - padding} y2={padding + usableHeight / 2} stroke="rgb(71 85 105 / 0.35)" strokeWidth="1" strokeDasharray="3 4" />
-        <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105 / 0.4)" strokeWidth="1" strokeDasharray="3 4" />
+        {Array.from({ length: (chartMax - chartMin) / 5 + 1 }, (_, index) => {
+          const temp = chartMin + index * 5;
+          const y = padding + ((chartMax - temp) / range) * usableHeight;
+          return (
+            <g key={`tick-${temp}`}>
+              <line
+                x1={yAxisX}
+                y1={y}
+                x2={width - padding}
+                y2={y}
+                stroke="rgb(71 85 105 / 0.25)"
+                strokeWidth="1"
+                strokeDasharray={temp % 10 === 0 ? '3 4' : '2 6'}
+              />
+              <text
+                x={yAxisX - 14}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="fill-slate-400 text-[9px]"
+              >
+                {temp.toFixed(1)}°F
+              </text>
+            </g>
+          );
+        })}
+        {thresholdTemps.map((temp) => {
+          const y = padding + ((chartMax - temp) / range) * usableHeight;
+          return (
+            <line
+              key={`threshold-${temp}`}
+              x1={yAxisX}
+              y1={y}
+              x2={width - padding}
+              y2={y}
+              stroke="rgb(248 113 113 / 0.65)"
+              strokeWidth="1.5"
+              strokeDasharray="6 6"
+            />
+          );
+        })}
         {[0.2, 0.4, 0.6, 0.8].map((step) => {
           const x = padding + usableWidth * step;
           return (
@@ -141,25 +179,17 @@ function TempSparkline({ logs }) {
             />
           );
         })}
-        <text x={yAxisX - 14} y={padding - 8} textAnchor="end" dominantBaseline="hanging" className="fill-slate-400 text-[9px]">
-          {topTemp.toFixed(1)}°F
-        </text>
-        <line x1={yAxisX} y1={midY} x2={width - padding} y2={midY} stroke="rgb(71 85 105)" strokeWidth="1" strokeDasharray="4 4" />
-        <text x={yAxisX - 14} y={midY - 6} textAnchor="end" className="fill-slate-400 text-[9px]">
-          {baselineTemp.toFixed(1)}°F
-        </text>
-        <text x={yAxisX - 14} y={xAxisY + 8} textAnchor="end" dominantBaseline="text-before-edge" className="fill-slate-400 text-[9px]">
-          {bottomTemp.toFixed(1)}°F
-        </text>
-        <text x={yAxisX} y={height - 6} textAnchor="start" className="fill-slate-400 text-[9px]">
-          {startLabel}
-        </text>
-        <text x={width / 2} y={height - 6} textAnchor="middle" className="fill-slate-400 text-[9px]">
-          {midTimestamp}
-        </text>
-        <text x={width - padding} y={height - 6} textAnchor="end" className="fill-slate-400 text-[9px]">
-          {endLabel}
-        </text>
+        {plottedPoints.map((point, index) => (
+          <text
+            key={`time-${index}`}
+            x={point.x}
+            y={height - 6}
+            textAnchor="middle"
+            className="fill-slate-400 text-[9px]"
+          >
+            {timeLabels[index]}
+          </text>
+        ))}
         <polyline
           fill="none"
           stroke="url(#tempTrendLine)"
