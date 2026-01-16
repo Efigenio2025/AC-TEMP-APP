@@ -79,6 +79,32 @@ input, select, button, textarea {
     border-color: #cbd5e1 !important;
   }
 
+  .print-report-header {
+    border-bottom: 2px solid #cbd5e1 !important;
+    background: #1d4ed8 !important;
+    color: white !important;
+  }
+
+  .print-report-header .print-report-title,
+  .print-report-header .print-report-subtitle {
+    color: white !important;
+  }
+
+  .print-report-summary {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .print-report-card {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+
+  .print-report-card-header {
+    background: #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
   .print-page-break {
     break-before: page;
     page-break-before: always;

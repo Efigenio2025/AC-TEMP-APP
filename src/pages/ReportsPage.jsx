@@ -572,16 +572,24 @@ export default function ReportsPage() {
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-xl shadow print-area">
-            <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800">
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800 print-report-header">
               <div>
-                <p className="text-xs uppercase text-brand">Printable Preview</p>
-                <h3 className="text-2xl font-bold">OMA | Aircraft Temps Report</h3>
-                <p className="text-sm text-slate-300">Archived, read-only snapshot</p>
+                <p className="text-xs uppercase text-brand print-hidden">Printable Preview</p>
+                <h3 className="text-2xl font-bold print-report-title">OMA Aircraft Temps Report</h3>
+                <p className="text-sm text-slate-300 print-report-subtitle">Archived, read-only snapshot</p>
               </div>
               <div className="text-right text-sm text-slate-300">
                 <p className="font-semibold">{formatDateRange(startDate, endDate)}</p>
                 <p className="text-slate-400">Station: {station}</p>
               </div>
+            </div>
+            <div className="p-4 border-b border-slate-800 print-report-summary">
+              <ul className="text-sm text-slate-200 space-y-1">
+                <li>Total Aircraft: <span className="font-semibold">{summaryRows.length}</span></li>
+                <li>Purged: <span className="font-semibold">{totals.purgedCount}</span></li>
+                <li>Not Purged: <span className="font-semibold">{Math.max(totals.totalTails - totals.purgedCount, 0)}</span></li>
+                <li>Avg Fleet Temp: <span className="font-semibold">{totals.average !== null ? `${totals.average.toFixed(1)}°F` : '—'}</span></li>
+              </ul>
             </div>
             <div className="p-4 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
               {previewMetadata.map((item) => (
@@ -599,11 +607,11 @@ export default function ReportsPage() {
                 return (
                   <div
                     key={row.tailNumber}
-                    className={`border border-slate-800 rounded-lg overflow-hidden print-avoid-break ${
+                    className={`border border-slate-800 rounded-lg overflow-hidden print-avoid-break print-report-card ${
                       index > 0 ? 'print-page-break' : ''
                     }`}
                   >
-                    <div className="bg-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="bg-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2 print-report-card-header">
                       <div>
                         <p className="text-xs uppercase text-brand">Tail</p>
                         <h4 className="text-xl font-bold">{row.tailNumber}</h4>
