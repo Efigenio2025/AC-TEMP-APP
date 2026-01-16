@@ -34,6 +34,218 @@ function formatDateRange(startDate, endDate) {
   return `${formatDisplayDate(startDate)} – ${formatDisplayDate(endDate)}`;
 }
 
+function sortTempLogs(logs = []) {
+  return logs
+    .slice()
+    .sort((a, b) => new Date(a.recorded_at || a.created_at) - new Date(b.recorded_at || b.created_at));
+}
+
+function TempSparkline({ logs }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const sortedLogs = sortTempLogs(logs);
+  const temps = sortedLogs.map((log) => Number(log.temp_f || 0));
+  const width = 568;
+  const height = 218;
+  const padding = 24;
+
+  if (!sortedLogs.length) {
+    return <p className="text-xs text-slate-400">No temperature logs recorded.</p>;
+  }
+
+  const min = Math.min(...temps);
+  const max = Math.max(...temps);
+  const chartMin = 30;
+  const chartMax = 130;
+  const thresholdTemps = [50, 70, 90];
+  const latestTemp = temps[temps.length - 1];
+  const firstLog = sortedLogs[0];
+  const lastLog = sortedLogs[sortedLogs.length - 1];
+  const firstTimestamp = new Date(firstLog.recorded_at || firstLog.created_at).getTime();
+  const lastTimestamp = new Date(lastLog.recorded_at || lastLog.created_at).getTime();
+  const hoursElapsed = (lastTimestamp - firstTimestamp) / (1000 * 60 * 60);
+  const averageRate = hoursElapsed > 0 ? (latestTemp - temps[0]) / hoursElapsed : null;
+  const averageTemp = temps.reduce((sum, temp) => sum + temp, 0) / temps.length;
+  const durationLabel =
+    hoursElapsed > 0 ? `${hoursElapsed.toFixed(1)} hr${hoursElapsed >= 1.5 ? 's' : ''}` : '—';
+  const startLabel = new Date(firstLog.recorded_at || firstLog.created_at).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const endLabel = new Date(lastLog.recorded_at || lastLog.created_at).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const gainLossLabel = averageRate === null ? 'Avg/hr' : `Avg/hr (${averageRate >= 0 ? 'Gain' : 'Loss'})`;
+  const range = chartMax - chartMin;
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+  const yAxisX = padding;
+  const xAxisY = height - padding;
+  const plottedPoints = temps.map((temp, index) => {
+    const x = temps.length === 1 ? width / 2 : padding + (index / (temps.length - 1)) * usableWidth;
+    const y = padding + ((chartMax - temp) / range) * usableHeight;
+    return { x, y };
+  });
+  const hoveredPoint = hoveredIndex !== null ? plottedPoints[hoveredIndex] : null;
+  const hoveredTemp = hoveredIndex !== null ? temps[hoveredIndex] : null;
+  const hoveredDelta =
+    hoveredIndex !== null && hoveredIndex > 0 ? hoveredTemp - temps[hoveredIndex - 1] : null;
+  const hoveredDeltaLabel =
+    hoveredDelta === null ? '—' : `${hoveredDelta >= 0 ? '+' : ''}${hoveredDelta.toFixed(1)}°F`;
+  const hoveredDeltaType =
+    hoveredDelta === null ? '—' : hoveredDelta >= 0 ? 'Gain' : 'Loss';
+  const points = plottedPoints.map((point) => `${point.x},${point.y}`).join(' ');
+  const lastPoint = plottedPoints[plottedPoints.length - 1];
+  const lastX = lastPoint?.x ?? width / 2;
+  const lastY = lastPoint?.y ?? height / 2;
+  const timeLabels = sortedLogs.map((log) =>
+    new Date(log.recorded_at || log.created_at).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+  );
+
+  return (
+    <div className="space-y-2">
+      <div className="relative mx-auto w-fit">
+        <svg width={width} height={height} className="block overflow-visible rounded bg-slate-900/70 border border-slate-800">
+        <defs>
+          <linearGradient id="tempTrendLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgb(56 189 248)" />
+            <stop offset="70%" stopColor="rgb(125 211 252)" />
+            <stop offset="100%" stopColor="rgb(250 204 21)" />
+          </linearGradient>
+        </defs>
+        <line x1={yAxisX} y1={padding} x2={yAxisX} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
+        <line x1={yAxisX} y1={xAxisY} x2={width - padding} y2={xAxisY} stroke="rgb(71 85 105)" strokeWidth="1" />
+        {Array.from({ length: (chartMax - chartMin) / 15 + 1 }, (_, index) => {
+          const temp = chartMin + index * 15;
+          const y = padding + ((chartMax - temp) / range) * usableHeight;
+          return (
+            <g key={`tick-${temp}`}>
+              <line
+                x1={yAxisX}
+                y1={y}
+                x2={width - padding}
+                y2={y}
+                stroke="rgb(71 85 105 / 0.25)"
+                strokeWidth="1"
+                strokeDasharray={temp % 10 === 0 ? '3 4' : '2 6'}
+              />
+              <text
+                x={yAxisX - 14}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="fill-slate-400 text-[9px]"
+              >
+                {temp.toFixed(1)}°F
+              </text>
+            </g>
+          );
+        })}
+        {thresholdTemps.map((temp) => {
+          const y = padding + ((chartMax - temp) / range) * usableHeight;
+          return (
+            <line
+              key={`threshold-${temp}`}
+              x1={yAxisX}
+              y1={y}
+              x2={width - padding}
+              y2={y}
+              stroke="rgb(248 113 113 / 0.65)"
+              strokeWidth="1.5"
+              strokeDasharray="6 6"
+            />
+          );
+        })}
+        {[0.2, 0.4, 0.6, 0.8].map((step) => {
+          const x = padding + usableWidth * step;
+          return (
+            <line
+              key={`grid-${step}`}
+              x1={x}
+              y1={padding}
+              x2={x}
+              y2={xAxisY}
+              stroke="rgb(71 85 105 / 0.25)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        {plottedPoints.map((point, index) => (
+          <text
+            key={`time-${index}`}
+            x={point.x}
+            y={height - 6}
+            textAnchor="middle"
+            className="fill-slate-400 text-[9px]"
+          >
+            {timeLabels[index]}
+          </text>
+        ))}
+        <polyline
+          fill="none"
+          stroke="url(#tempTrendLine)"
+          strokeWidth="3"
+          points={points}
+        />
+        {plottedPoints.map((point, index) => (
+          <circle
+            key={`dot-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={index === plottedPoints.length - 1 ? 6 : 4}
+            fill={index === plottedPoints.length - 1 ? 'rgb(250 204 21)' : 'rgb(125 211 252)'}
+            stroke="rgb(15 23 42)"
+            strokeWidth="2"
+            className="cursor-pointer"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            onFocus={() => setHoveredIndex(index)}
+            onBlur={() => setHoveredIndex(null)}
+            tabIndex={0}
+          />
+        ))}
+        <circle cx={lastX} cy={lastY} r="10" fill="rgb(250 204 21 / 0.2)" />
+      </svg>
+      {hoveredPoint && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-full rounded-md border border-slate-700 bg-slate-950/95 px-2 py-1 text-[11px] text-slate-100 shadow-lg"
+          style={{ left: hoveredPoint.x, top: hoveredPoint.y }}
+        >
+          <div className="font-semibold">{hoveredTemp.toFixed(1)}°F</div>
+          <div className="text-slate-300">
+            {hoveredDeltaType}: {hoveredDeltaLabel}
+          </div>
+        </div>
+      )}
+      </div>
+      <div className="grid gap-2 text-[11px] text-slate-300 sm:grid-cols-2 sm:items-center">
+        <div className="space-y-1 text-center sm:text-left">
+          <p>Latest: {latestTemp.toFixed(1)}°F</p>
+          <p>Average: {averageTemp.toFixed(1)}°F</p>
+          <p>Range: {min.toFixed(1)}–{max.toFixed(1)}°F</p>
+        </div>
+        <div className="space-y-1 text-center sm:text-right">
+          <p>
+            {gainLossLabel}:{' '}
+            {averageRate !== null ? `${averageRate >= 0 ? '+' : ''}${averageRate.toFixed(2)}°F` : '—'}
+          </p>
+          <p>Duration: {durationLabel}</p>
+          <p>Window: {startLabel} → {endLabel}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function findRecorder(logsForTail = []) {
   const recorder = logsForTail.find((log) => log.recorded_by || log.recorder || log.created_by || log.user_email);
   return recorder?.recorded_by || recorder?.recorder || recorder?.created_by || recorder?.user_email || '—';
@@ -96,7 +308,6 @@ export default function ReportsPage() {
   const [notes, setNotes] = useState([]);
   const [tailOptions, setTailOptions] = useState([]);
   const [ranReport, setRanReport] = useState(false);
-
   const summaryRows = useMemo(() => summarizeTails(tails, logs), [tails, logs]);
 
   const totals = useMemo(() => {
@@ -194,7 +405,7 @@ export default function ReportsPage() {
 
   return (
     <div className="py-6 space-y-6">
-      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow print-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
             <p className="text-xs uppercase text-brand">Archive</p>
@@ -360,19 +571,27 @@ export default function ReportsPage() {
             )}
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl shadow print-area">
-            <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl shadow print-area report-print-surface">
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800 print-report-header report-print-header">
               <div>
-                <p className="text-xs uppercase text-brand">Printable Preview</p>
-                <h3 className="text-2xl font-bold">OMA | Aircraft Temps Report</h3>
-                <p className="text-sm text-slate-300">Archived, read-only snapshot</p>
+                <p className="text-xs uppercase text-brand print-hidden">Printable Preview</p>
+                <h3 className="text-2xl font-bold print-report-title">OMA Aircraft Temps Report</h3>
+                <p className="text-sm text-slate-300 print-report-subtitle">Archived, read-only snapshot</p>
               </div>
               <div className="text-right text-sm text-slate-300">
                 <p className="font-semibold">{formatDateRange(startDate, endDate)}</p>
                 <p className="text-slate-400">Station: {station}</p>
               </div>
             </div>
-            <div className="p-4 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+            <div className="p-4 border-b border-slate-800 print-report-summary report-summary-card">
+              <ul className="report-summary-list text-sm text-slate-200">
+                <li className="report-summary-item">Total Aircraft: <span className="font-semibold">{summaryRows.length}</span></li>
+                <li className="report-summary-item">Purged: <span className="font-semibold">{totals.purgedCount}</span></li>
+                <li className="report-summary-item">Not Purged: <span className="font-semibold">{Math.max(totals.totalTails - totals.purgedCount, 0)}</span></li>
+                <li className="report-summary-item">Avg Fleet Temp: <span className="font-semibold">{totals.average !== null ? `${totals.average.toFixed(1)}°F` : '—'}</span></li>
+              </ul>
+            </div>
+            <div className="p-4 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm print-hidden">
               {previewMetadata.map((item) => (
                 <div key={item.label} className="bg-slate-800/70 rounded-lg border border-slate-700 px-3 py-2">
                   <p className="text-slate-400">{item.label}</p>
@@ -382,12 +601,20 @@ export default function ReportsPage() {
             </div>
             <div className="p-4 space-y-4">
               {summaryRows.length === 0 && <p className="text-slate-300">No archive data in this range.</p>}
-              {summaryRows.map((row) => {
+              {summaryRows.map((row, index) => {
                 const logsForTail = includeTempLogs ? row.logs : [];
                 const notesForTail = includeNotes ? notes.filter((n) => n.tail_number === row.tailNumber) : [];
+                const headerTone = row.purgedStatus?.toLowerCase().includes('purged')
+                  ? 'report-card-header-green'
+                  : 'report-card-header-red';
                 return (
-                  <div key={row.tailNumber} className="border border-slate-800 rounded-lg overflow-hidden">
-                    <div className="bg-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                  <div
+                    key={row.tailNumber}
+                    className={`border border-slate-800 rounded-lg overflow-hidden print-avoid-break report-print-surface report-aircraft-card ${
+                      index > 0 ? 'print-page-break' : ''
+                    }`}
+                  >
+                    <div className={`bg-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2 print-report-card-header ${headerTone}`}>
                       <div>
                         <p className="text-xs uppercase text-brand">Tail</p>
                         <h4 className="text-xl font-bold">{row.tailNumber}</h4>
@@ -456,6 +683,13 @@ export default function ReportsPage() {
                         )}
                       </div>
                     )}
+                    <div className="px-4 py-4 border-t border-slate-800">
+                      <p className="text-sm font-semibold text-slate-200 mb-3">Temperature Trend</p>
+                      <div className="flex justify-center">
+                        <TempSparkline logs={row.logs} />
+                      </div>
+                      <p className="mt-2 text-[11px] text-slate-400">{row.logs.length} log(s) recorded.</p>
+                    </div>
                   </div>
                 );
               })}

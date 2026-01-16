@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ReportsPage from './pages/ReportsPage';
+import ReportPrintPage from './pages/ReportPrintPage';
 import AdminPage from './pages/AdminPage';
 import { useAuth } from './hooks/useAuth';
 import { getSupabaseClient } from './supabaseClient';
@@ -197,6 +198,7 @@ export default function App() {
         <Route path="/log" element={<LogPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/print" element={<ReportPrintPage />} />
         <Route
           path="/admin"
           element={

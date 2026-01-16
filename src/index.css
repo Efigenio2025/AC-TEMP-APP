@@ -45,6 +45,70 @@ input, select, button, textarea {
   /* Tailwind-like utility to hide during print */
 }
 
+.report-print-surface {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+}
+
+.report-print-header {
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.95), rgba(30, 64, 175, 0.95));
+  color: white;
+}
+
+.report-summary-card {
+  padding: 16px;
+}
+
+.report-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.report-summary-item {
+  position: relative;
+  padding-left: 18px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.report-summary-item::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #38bdf8;
+}
+
+.report-aircraft-card {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.report-card-header-green {
+  background: linear-gradient(90deg, #166534, #84cc16);
+  color: white;
+}
+
+.report-card-header-red {
+  background: linear-gradient(90deg, #b91c1c, #f97316);
+  color: white;
+}
+
+.report-status-strip {
+  background: linear-gradient(90deg, rgba(30, 58, 138, 0.95), rgba(148, 163, 184, 0.4));
+}
+
+.report-chart-placeholder {
+  background-image: linear-gradient(180deg, rgba(148, 163, 184, 0.12), rgba(15, 23, 42, 0.2));
+}
+
+.report-table tbody tr {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
 @media print {
   body {
     background: white;
@@ -63,10 +127,6 @@ input, select, button, textarea {
     border-color: #cbd5e1 !important;
   }
 
-  .print-area * {
-    color: inherit !important;
-  }
-
   .print-area .bg-slate-800,
   .print-area .bg-slate-900,
   .print-area [class*="bg-slate-8"],
@@ -77,5 +137,106 @@ input, select, button, textarea {
   .print-area .border-slate-800,
   .print-area .border-slate-700 {
     border-color: #cbd5e1 !important;
+  }
+
+  .print-report-header {
+    border-bottom: 2px solid #cbd5e1 !important;
+    background: #1d4ed8 !important;
+    color: white !important;
+  }
+
+  .print-report-header .print-report-title,
+  .print-report-header .print-report-subtitle {
+    color: white !important;
+  }
+
+  .print-report-summary {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .print-report-card {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+
+  .print-report-card-header {
+    background: #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  .print-report-page {
+    background: white !important;
+    color: #0f172a !important;
+  }
+
+  .print-report-header-bar {
+    padding: 16px;
+    border-radius: 12px;
+    background: #1e3a8a !important;
+    color: white !important;
+  }
+
+  .report-print-surface {
+    border-color: #cbd5e1 !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .report-print-header {
+    background: #1d4ed8 !important;
+    color: white !important;
+  }
+
+  .report-summary-item {
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .report-summary-item::before {
+    color: #2563eb !important;
+  }
+
+  .report-aircraft-card {
+    background: white !important;
+  }
+
+  .report-status-strip {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
+  .print-summary-card {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .print-aircraft-card {
+    background: white !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .print-card-header-green {
+    background: linear-gradient(90deg, #166534, #65a30d) !important;
+    color: white !important;
+  }
+
+  .print-card-header-red {
+    background: linear-gradient(90deg, #b91c1c, #f97316) !important;
+    color: white !important;
+  }
+
+  .print-status-strip {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
+  .print-page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
