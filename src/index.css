@@ -105,6 +105,43 @@ input, select, button, textarea {
     border-bottom: 1px solid #cbd5e1 !important;
   }
 
+  .print-report-page {
+    background: white !important;
+    color: #0f172a !important;
+  }
+
+  .print-report-header-bar {
+    padding: 16px;
+    border-radius: 12px;
+    background: #1e3a8a !important;
+    color: white !important;
+  }
+
+  .print-summary-card {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .print-aircraft-card {
+    background: white !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .print-card-header-green {
+    background: linear-gradient(90deg, #166534, #65a30d) !important;
+    color: white !important;
+  }
+
+  .print-card-header-red {
+    background: linear-gradient(90deg, #b91c1c, #f97316) !important;
+    color: white !important;
+  }
+
+  .print-status-strip {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
   .print-page-break {
     break-before: page;
     page-break-before: always;
