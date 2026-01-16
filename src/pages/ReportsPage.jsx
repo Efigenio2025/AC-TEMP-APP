@@ -405,7 +405,7 @@ export default function ReportsPage() {
 
   return (
     <div className="py-6 space-y-6">
-      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow">
+      <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 shadow print-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
             <p className="text-xs uppercase text-brand">Archive</p>
