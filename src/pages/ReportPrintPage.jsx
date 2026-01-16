@@ -79,7 +79,7 @@ export default function ReportPrintPage() {
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6 print-report-page">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-start justify-between">
-          <div className="print-report-header-bar">
+          <div className="report-print-surface report-print-header">
             <h1 className="text-3xl font-bold">{reportData.title}</h1>
             <p className="text-sm text-slate-200">{reportData.dateRange}</p>
           </div>
@@ -92,48 +92,53 @@ export default function ReportPrintPage() {
           </button>
         </div>
 
-        <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 print-summary-card">
+        <div className="report-print-surface report-summary-card">
           <h2 className="text-lg font-semibold mb-3">Summary Overview</h2>
-          <ul className="grid gap-2 text-sm text-slate-200">
-            <li>Total Aircraft: <span className="font-semibold">{summary.totalAircraft}</span></li>
-            <li>Purged: <span className="font-semibold">{summary.purgedCount}</span></li>
-            <li>Not Purged: <span className="font-semibold">{summary.notPurged}</span></li>
-            <li>Avg Fleet Temp: <span className="font-semibold">{summary.avgFleetTemp}°F</span></li>
-            <li>Highest Temp: <span className="font-semibold">{summary.highestTemp}</span></li>
-            <li>Fastest Rise: <span className="font-semibold">{summary.fastestRise}</span></li>
+          <ul className="report-summary-list text-sm text-slate-200">
+            <li className="report-summary-item">Total Aircraft: <span className="font-semibold">{summary.totalAircraft}</span></li>
+            <li className="report-summary-item">Purged: <span className="font-semibold">{summary.purgedCount}</span></li>
+            <li className="report-summary-item">Not Purged: <span className="font-semibold">{summary.notPurged}</span></li>
+            <li className="report-summary-item">Avg Fleet Temp: <span className="font-semibold">{summary.avgFleetTemp}°F</span></li>
+            <li className="report-summary-item">Highest Temp: <span className="font-semibold">{summary.highestTemp}</span></li>
+            <li className="report-summary-item">Fastest Rise: <span className="font-semibold">{summary.fastestRise}</span></li>
           </ul>
         </div>
 
         <div className="space-y-6">
           {reportData.aircraft.map((aircraft, index) => {
             const headerClass = aircraft.purged
-              ? 'print-card-header-green'
-              : 'print-card-header-red';
+              ? 'report-card-header-green'
+              : 'report-card-header-red';
             return (
               <div
                 key={aircraft.tailNumber}
-                className={`rounded-xl border border-slate-700 bg-slate-800/50 shadow-sm print-aircraft-card print-avoid-break ${
+                className={`report-print-surface report-aircraft-card print-avoid-break ${
                   index > 0 ? 'print-page-break' : ''
                 }`}
               >
                 <div className={`px-4 py-3 rounded-t-xl flex items-center justify-between ${headerClass}`}>
-                  <div>
+                  <div className="flex items-center gap-3">
                     <p className="text-2xl font-bold">{aircraft.tailNumber}</p>
+                    <span className="text-sm opacity-90">|</span>
                     <p className="text-sm">{aircraft.nightDate}</p>
                   </div>
                 </div>
 
                 <div className="grid gap-4 px-4 py-4 md:grid-cols-[1fr,2fr]">
-                  <div className="space-y-2 text-sm text-slate-200">
-                    <p className="text-slate-400">Heat Source</p>
-                    <p className="font-semibold">{aircraft.heatSource}</p>
-                    <p className="text-slate-400">Purge Status</p>
-                    <p className="font-semibold">
-                      {aircraft.purged ? '✔ Purged' : '✖ Not Purged'}
-                      {aircraft.purgedAt ? ` · ${aircraft.purgedAt}` : ''}
-                    </p>
+                  <div className="space-y-3 text-sm text-slate-200">
+                    <div>
+                      <p className="text-slate-400">Heat Source</p>
+                      <p className="font-semibold">{aircraft.heatSource}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Purge Status</p>
+                      <p className="font-semibold">
+                        {aircraft.purged ? '✔ Purged' : '✖ Not Purged'}
+                        {aircraft.purgedAt ? ` · ${aircraft.purgedAt}` : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3 print-status-strip">
+                  <div className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3 report-status-strip">
                     <div className="text-3xl font-bold">{aircraft.latestTemp}°F</div>
                     <div className="text-sm text-slate-200">
                       Latest · Avg {aircraft.averageTemp}°F · Trend: {formatTrend(aircraft.trendPerHour)}
@@ -142,7 +147,7 @@ export default function ReportPrintPage() {
                 </div>
 
                 <div className="px-4 pb-4">
-                  <div className="h-40 rounded-lg border border-slate-700 bg-slate-900/40 flex items-center justify-center text-sm text-slate-400">
+                  <div className="h-40 rounded-lg border border-slate-700 bg-slate-900/40 flex items-center justify-center text-sm text-slate-400 report-chart-placeholder">
                     Trend chart placeholder
                   </div>
                   <p className="mt-2 text-xs text-slate-300">
@@ -151,7 +156,7 @@ export default function ReportPrintPage() {
                 </div>
 
                 <div className="px-4 pb-4">
-                  <div className="overflow-hidden rounded-lg border border-slate-700">
+                  <div className="overflow-hidden rounded-lg border border-slate-700 report-table">
                     <table className="min-w-full text-sm text-left">
                       <thead className="bg-slate-900/70 text-slate-200">
                         <tr>
@@ -177,7 +182,10 @@ export default function ReportPrintPage() {
 
                 <div className="px-4 pb-4 text-sm">
                   {aircraft.notes.length === 0 ? (
-                    <p className="text-slate-300">No Notes</p>
+                    <p className="text-slate-300 flex items-center gap-2">
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-600 text-xs">🗒</span>
+                      No Notes
+                    </p>
                   ) : (
                     <div className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2 text-slate-200">
                       {aircraft.notes.map((note) => (
