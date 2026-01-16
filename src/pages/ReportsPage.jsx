@@ -593,11 +593,16 @@ export default function ReportsPage() {
             </div>
             <div className="p-4 space-y-4">
               {summaryRows.length === 0 && <p className="text-slate-300">No archive data in this range.</p>}
-              {summaryRows.map((row) => {
+              {summaryRows.map((row, index) => {
                 const logsForTail = includeTempLogs ? row.logs : [];
                 const notesForTail = includeNotes ? notes.filter((n) => n.tail_number === row.tailNumber) : [];
                 return (
-                  <div key={row.tailNumber} className="border border-slate-800 rounded-lg overflow-hidden">
+                  <div
+                    key={row.tailNumber}
+                    className={`border border-slate-800 rounded-lg overflow-hidden print-avoid-break ${
+                      index > 0 ? 'print-page-break' : ''
+                    }`}
+                  >
                     <div className="bg-slate-800/80 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="text-xs uppercase text-brand">Tail</p>
