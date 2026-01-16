@@ -8,6 +8,7 @@ const reportData = {
       tailNumber: 'N253NN',
       nightDate: 'Jan 14, 2026',
       heatSource: 'HG014',
+      goodTemp: true,
       purged: true,
       purgedAt: 'Jan 14, 10:45 PM',
       latestTemp: 69,
@@ -27,6 +28,7 @@ const reportData = {
       tailNumber: 'N344PP',
       nightDate: 'Jan 14, 2026',
       heatSource: 'AC0066',
+      goodTemp: false,
       purged: false,
       purgedAt: null,
       latestTemp: 91,
@@ -106,7 +108,7 @@ export default function ReportPrintPage() {
 
         <div className="space-y-6">
           {reportData.aircraft.map((aircraft, index) => {
-            const headerClass = aircraft.purged
+            const headerClass = aircraft.purged || aircraft.goodTemp
               ? 'report-card-header-green'
               : 'report-card-header-red';
             return (
